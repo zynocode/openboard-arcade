@@ -35,22 +35,27 @@
 /* ── Portrait vs Landscape Shortest-Edge Constraint ── */
 @media (orientation: portrait) {
   :root {
-    --board-size: clamp(300px, 92vw, 550px);
+    --board-size: clamp(300px, 95vw, 600px);
     --hud-width: var(--board-size);
   }
   .playing-full-bleed {
-    --board-size: clamp(300px, 90vw, 520px) !important;
+    --board-size: clamp(300px, 94vw, 560px) !important;
   }
 }
 
 @media (orientation: landscape) {
   :root {
-    --board-size: clamp(320px, 72vh, 680px);
+    --board-size: clamp(320px, 84vh, 760px);
     --hud-width: var(--board-size);
   }
   .playing-full-bleed {
-    --board-size: clamp(300px, 68vh, 640px) !important;
+    --board-size: clamp(300px, 80vh, 720px) !important;
   }
+}
+
+:root {
+  /* Dice scales exactly with grid columns (1/15 of board width, minus 6% margin for cell boundaries) */
+  --dice-size: calc(var(--board-size) / 15 * 0.94);
 }
 
 body {
@@ -1292,6 +1297,47 @@ h1, h2, h3, h4 {
   .playing-2p-top {
     transform: none;
   }
+}
+
+/* ── 3D RESPONSIVE DICE STYLING ── */
+.dice-scene {
+  position: relative;
+  width: var(--dice-size);
+  height: var(--dice-size);
+  perspective: calc(var(--dice-size) * 4);
+  transition: filter 0.3s ease;
+  user-select: none;
+}
+
+.dice-cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.dice-face {
+  position: absolute;
+  width: var(--dice-size);
+  height: var(--dice-size);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(8, 14, 28, 0.99));
+  border: 1.5px solid var(--dice-border-color, #6366f1);
+  border-radius: calc(var(--dice-size) * 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.08), inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+  backface-visibility: visible;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dice-pip {
+  width: calc(var(--dice-size) * 0.18);
+  height: calc(var(--dice-size) * 0.18);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, var(--dice-border-color, #6366f1) 80%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 3px var(--dice-border-color, #6366f1);
 }
 
 

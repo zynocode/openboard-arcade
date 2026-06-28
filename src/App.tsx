@@ -62,7 +62,6 @@ export default function App() {
     validMoves, 
     rollDice, 
     selectToken,
-    lastActionNotice,
     lastMatchConfig
   } = useGameStore();
 
@@ -162,136 +161,60 @@ export default function App() {
     setActiveGame('ARENA');
   };
 
-  // ─── Player Panel Renderer ───────────────────────────────────────────────
-  const renderPanel = (
-    p: typeof players[0],
-    flip = false,         // true = flip vertically (top player in 2P mode)
-    isCorner = false,     // true = compact corner card (4P mode)
-    cornerPos?: 'tl' | 'tr' | 'bl' | 'br'
-  ) => {
-    const cs      = colorStyle(p.color);
-    const home    = p.tokens.filter(t => t === 56).length;
-    const isAct   = players[activePlayerIndex]?.id === p.id;
+  // ─── Corner Dice Slot Renderer ───────────────────────────────────────────
+  const renderCornerSlot = (pos: 'tl' | 'tr' | 'bl' | 'br') => {
+    const humanPlayer = players.find(p => p.isHuman);
+    const isRotated = humanPlayer && (humanPlayer.color === 'red' || humanPlayer.color === 'green');
 
-    const cardStyle: React.CSSProperties = {
-      display: 'flex',
-      flexDirection: isCorner
-        ? (cornerPos === 'tr' || cornerPos === 'br') ? 'row-reverse' : 'row'
-        : flip ? 'row-reverse' : 'row',
-      alignItems: 'center',
-      gap: isCorner ? '8px' : '14px',
-      padding: isCorner ? '8px 12px' : '12px 20px',
-      borderRadius: isCorner ? '14px' : '18px',
-      background: isAct
-        ? `linear-gradient(135deg, ${cs.bg} 0%, rgba(15,23,42,0.9) 100%)`
-        : 'rgba(10,18,35,0.75)',
-      border: `1.5px solid ${isAct ? cs.border : 'rgba(255,255,255,0.07)'}`,
-      boxShadow: isAct
-        ? `0 0 0 1px ${cs.border}22, 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)`
-        : '0 4px 16px rgba(0,0,0,0.4)',
-      backdropFilter: 'blur(16px)',
-      transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-      cursor: 'default',
-      userSelect: 'none',
-      minWidth: isCorner ? 'auto' : '180px',
-      position: 'relative',
-      overflow: 'hidden',
-    };
+    // Map screen positions to color bases based on board rotation
+    const posToColor = isRotated
+      ? { tl: 'yellow', tr: 'blue', bl: 'green', br: 'red' }
+      : { tl: 'red', tr: 'green', bl: 'blue', br: 'yellow' };
 
-    const avatarSize = isCorner ? 36 : 48;
+    const color = posToColor[pos];
+    const player = players.find(p => p.color === color);
+
+    if (!player) return null;
+
+    const isAct = activePlayer?.id === player.id;
+    const cs = colorStyle(player.color);
+    const home = player.tokens.filter(t => t === 56).length;
 
     return (
-      <div style={cardStyle}>
-        {/* Glow shimmer for active */}
-        {isAct && (
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: 'inherit',
-            background: `radial-gradient(ellipse 80% 60% at 20% 50%, ${cs.bg} 0%, transparent 70%)`,
-            pointerEvents: 'none',
-          }} />
-        )}
-
-        {/* Avatar */}
-        <div style={{
-          width: avatarSize, height: avatarSize, borderRadius: '50%', flexShrink: 0,
-          background: isAct ? `radial-gradient(circle at 35% 35%, ${cs.border}33, rgba(10,18,35,0.95))` : 'rgba(10,18,35,0.8)',
-          border: `2px solid ${isAct ? cs.border : 'rgba(255,255,255,0.1)'}`,
-          boxShadow: isAct ? `0 0 16px ${cs.border}66, inset 0 1px 0 rgba(255,255,255,0.15)` : 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.35s ease',
-          position: 'relative', zIndex: 1,
-        }}>
-          {p.isHuman
-            ? <svg width={isCorner ? 16 : 20} height={isCorner ? 16 : 20} viewBox="0 0 24 24" fill="none" stroke={isAct ? cs.border : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-            : <svg width={isCorner ? 16 : 20} height={isCorner ? 16 : 20} viewBox="0 0 24 24" fill="none" stroke={isAct ? cs.border : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="12" y1="15" x2="12" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/></svg>
-          }
-        </div>
-
-        {/* Info */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, position: 'relative', zIndex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{
-              fontFamily: "'Chakra Petch', 'Outfit', sans-serif",
-              fontSize: isCorner ? '11px' : '14px',
-              fontWeight: 700,
-              color: isAct ? '#fff' : '#94a3b8',
-              letterSpacing: '0.3px',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              maxWidth: isCorner ? '70px' : '120px',
-              transition: 'color 0.3s ease',
-            }}>
-              {p.name}
-            </span>
-            {!p.isHuman && (
-              <span style={{
-                fontSize: '8px', fontWeight: 800, padding: '1px 5px', borderRadius: '4px',
-                background: 'rgba(255,255,255,0.07)', color: cs.text,
-                border: `1px solid ${cs.border}33`, letterSpacing: '0.8px',
-                textTransform: 'uppercase', fontFamily: "'Chakra Petch', monospace",
-              }}>
-                BOT
-              </span>
-            )}
+      <div 
+        className={`corner-dice-slot corner-dice-slot-${pos}`}
+        style={{ '--player-color': cs.border, '--player-color-glow': `${cs.border}33` } as React.CSSProperties}
+      >
+        <div className={`corner-dice-card ${isAct ? 'active' : ''}`}>
+          <div className="corner-dice-profile">
+            <div className="corner-dice-name">{player.name}</div>
+            <div className="corner-dice-status">
+              {!player.isHuman && <span className="corner-dice-badge">BOT</span>}
+              <span>🏁 {home}/4</span>
+            </div>
           </div>
-
-          {/* Token progress dots */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: isCorner ? '3px' : '4px' }}>
-            {Array.from({ length: 4 }).map((_, i) => {
-              const done = i < home;
-              return (
-                <div key={i} style={{
-                  width: isCorner ? '7px' : '9px', height: isCorner ? '7px' : '9px',
-                  borderRadius: '50%',
-                  background: done
-                    ? `radial-gradient(circle at 35% 35%, ${cs.text}, ${cs.border})`
-                    : 'rgba(255,255,255,0.05)',
-                  border: `1.5px solid ${done ? cs.border : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: done ? `0 0 6px ${cs.border}` : 'none',
-                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                }} />
-              );
-            })}
-            {!isCorner && (
-              <span style={{ fontSize: '10px', color: isAct ? cs.text : '#475569', marginLeft: '4px', fontWeight: 700, fontFamily: "'Chakra Petch', monospace" }}>
-                {home}/4
-              </span>
+          <div className="corner-dice-slot-box">
+            {isAct && gameStatus !== 'GAME_OVER' ? (
+              <Dice onRoll={handleRollDice} />
+            ) : (
+              /* Dimmed placeholder representing the waiting state */
+              <div style={{
+                width: '60%',
+                height: '60%',
+                borderRadius: '4px',
+                border: `1.5px solid ${cs.border}44`,
+                background: `${cs.border}0d`,
+                boxShadow: `inset 0 0 6px ${cs.border}11`
+              }} />
             )}
           </div>
         </div>
-
-        {/* Inline Dice — only for active player */}
-        {isAct && (
-          <div style={{ flexShrink: 0, position: 'relative', zIndex: 1 }}>
-            <Dice onRoll={handleRollDice} compact />
-          </div>
-        )}
       </div>
     );
   };
 
   // ─── Playing Screen ───────────────────────────────────────────────────────
-  const playerCount = players.length;
-  const is2Player   = playerCount === 2;
+
 
   return (
     <div style={{ position: 'relative', width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -405,113 +328,18 @@ export default function App() {
                 position: 'relative',
                 overflow: 'hidden'
               }}>
-                {/* ── 2-PLAYER LAYOUT: Top ↔ Bottom ───────────────────────── */}
-                {is2Player ? (() => {
-                  // Human player is always at the bottom of the screen
-                  const bottomPlayer = players.find(p => p.isHuman) || players[0];
-                  const topPlayer = players.find(p => p.id !== bottomPlayer.id) || players[1];
+                <div className="ludo-board-wrapper">
+                  <div id="game-container" className="game-canvas-wrap" />
 
-                  return (
-                    <div className="playing-2p-layout">
-                      {/* Top/Left player (flipped in portrait, normal on left in landscape) */}
-                      <div className="playing-2p-top">
-                        {renderPanel(topPlayer, true)}
-                      </div>
-
-                      {/* Board */}
-                      <div style={{ position: 'relative' }}>
-                        <div id="game-container" className="game-canvas-wrap" />
-                        {/* Event Banner */}
-                        {lastActionNotice !== 'NONE' && (
-                          <div style={{
-                            position: 'absolute', top: '50%', left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            padding: '12px 22px', borderRadius: '16px', zIndex: 150,
-                            fontSize: '14px', fontWeight: 800,
-                            fontFamily: "'Chakra Petch', sans-serif",
-                            border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
-                            background: 'rgba(2,6,23,0.94)',
-                            color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                            animation: 'bannerIn 0.3s ease forwards',
-                            pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-                          }}>
-                            {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
-                            {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
-                            {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
-                            {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Bottom/Right player */}
-                      <div>
-                        {renderPanel(bottomPlayer, false)}
-                      </div>
-                    </div>
-                  );
-                })() : (() => {
-                  /* ── 4-PLAYER LAYOUT: Responsive Grid with Rotation Mapping ── */
-                  const humanPlayer = players.find(p => p.isHuman);
-                  const isRotated = humanPlayer && (humanPlayer.color === 'red' || humanPlayer.color === 'green');
-                  
-                  // Map screen positions to color bases based on board rotation
-                  const posToColor = isRotated
-                    ? { tl: 'yellow', tr: 'blue', bl: 'green', br: 'red' }
-                    : { tl: 'red', tr: 'green', bl: 'blue', br: 'yellow' };
-
-                  const getPlayerByColor = (color: string) => players.find(p => p.color === color);
-
-                  return (
-                    <div className="grid-4p-layout">
-                      {/* TL — Top Left position */}
-                      <div className="grid-4p-tl">
-                        {getPlayerByColor(posToColor.tl) && renderPanel(getPlayerByColor(posToColor.tl)!, false, true, 'tl')}
-                      </div>
-                      {/* TR — Top Right position */}
-                      <div className="grid-4p-tr">
-                        {getPlayerByColor(posToColor.tr) && renderPanel(getPlayerByColor(posToColor.tr)!, false, true, 'tr')}
-                      </div>
-
-                      {/* Board */}
-                      <div className="grid-4p-board" style={{ position: 'relative' }}>
-                        <div id="game-container" className="game-canvas-wrap" />
-                        {lastActionNotice !== 'NONE' && (
-                          <div style={{
-                            position: 'absolute', top: '50%', left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            padding: '12px 22px', borderRadius: '16px', zIndex: 150,
-                            fontSize: '14px', fontWeight: 800,
-                            fontFamily: "'Chakra Petch', sans-serif",
-                            border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
-                            background: 'rgba(2,6,23,0.94)',
-                            color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                            animation: 'bannerIn 0.3s ease forwards',
-                            pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-                          }}>
-                            {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
-                            {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
-                            {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
-                            {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* BL — Bottom Left position */}
-                      <div className="grid-4p-bl">
-                        {getPlayerByColor(posToColor.bl) && renderPanel(getPlayerByColor(posToColor.bl)!, false, true, 'bl')}
-                      </div>
-                      {/* BR — Bottom Right position */}
-                      <div className="grid-4p-br">
-                        {getPlayerByColor(posToColor.br) && renderPanel(getPlayerByColor(posToColor.br)!, false, true, 'br')}
-                      </div>
-                    </div>
-                  );
-                })()}
+                  {/* Corner slots for profile + dice */}
+                  {renderCornerSlot('tl')}
+                  {renderCornerSlot('tr')}
+                  {renderCornerSlot('bl')}
+                  {renderCornerSlot('br')}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
           {/* GAME OVER */}
           {currentScreen === 'GAME_OVER' && (
