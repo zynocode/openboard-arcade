@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 import MainScene from './scenes/MainScene';
 
-export function initLudoGame(containerId: string, boardSize = 600): Phaser.Game {
+export function initLudoGame(containerId: string): Phaser.Game {
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
-    width: boardSize,
-    height: boardSize,
+    width: 600,
+    height: 600,
     parent: containerId,
     physics: {
       default: 'arcade',

@@ -44,21 +44,6 @@ function Confetti() {
   );
 }
 
-// ---- Dynamic board size (responsive) ------------------------------------
-function useBoardSize() {
-  const [size, setSize] = useState(() => Math.min(600, Math.max(300, Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.58))));
-
-  useEffect(() => {
-    const handler = () => {
-      setSize(Math.min(600, Math.max(300, Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.58))));
-    };
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-
-  return size;
-}
-
 // =========================================================================
 export default function App() {
   const [activeGame, setActiveGame] = useState<'ARENA' | 'LUDO'>('ARENA');
@@ -82,7 +67,6 @@ export default function App() {
   } = useGameStore();
 
   const gameRef = useRef<Phaser.Game | null>(null);
-  const boardSize = useBoardSize();
   const prevScreenRef = useRef(currentScreen);
   const matchSettingsRef = useRef<{ numCPUs: number; difficulty: 'easy' | 'medium' | 'hard'; color: 'red' | 'green' | 'yellow' | 'blue' } | null>(null);
 
@@ -95,7 +79,7 @@ export default function App() {
   // Phaser Initialization
   useEffect(() => {
     if (activeGame === 'LUDO' && currentScreen === 'PLAYING' && !gameRef.current) {
-      gameRef.current = initLudoGame('game-container', boardSize);
+      gameRef.current = initLudoGame('game-container');
     }
     if ((activeGame !== 'LUDO' || currentScreen !== 'PLAYING') && gameRef.current) {
       gameRef.current.destroy(true);
@@ -148,6 +132,20 @@ export default function App() {
 
     return () => { if (timeoutId) window.clearTimeout(timeoutId); };
   }, [currentScreen, activeGame, activePlayerIndex, gameStatus, validMoves, players, rollDice, selectToken, diceValue, mute]);
+
+  // Human Auto-Move hook: automatically select token if only 1 is playable
+  useEffect(() => {
+    if (activeGame !== 'LUDO' || currentScreen !== 'PLAYING') return;
+    const activePlayer = players[activePlayerIndex];
+    if (!activePlayer || !activePlayer.isHuman) return;
+
+    if (gameStatus === 'WAITING_FOR_MOVE' && validMoves.length === 1) {
+      const timeoutId = window.setTimeout(() => {
+        selectToken(validMoves[0]);
+      }, 800); // 800ms delay so human can see what was rolled
+      return () => window.clearTimeout(timeoutId);
+    }
+  }, [currentScreen, activeGame, activePlayerIndex, gameStatus, validMoves, selectToken, players]);
 
   const activePlayer = players[activePlayerIndex];
 
