@@ -52,8 +52,37 @@ export default function MainMenu({ onBackToArena }: { onBackToArena?: () => void
   const handleStartGame = () => {
     if (!isValidSetup) return;
 
-    // Convert seat config to store configured players list
-    const configuredPlayers: ConfiguredPlayer[] = activeSeats.map((s) => ({
+    let active = activeSeats;
+
+    // ── 2-player diagonal fix ──────────────────────────────────────────────
+    // Standard Ludo diagonals: Red↔Yellow, Green↔Blue
+    // If user picks an adjacent pair (e.g. Red+Green), remap second player
+    // to the diagonal opposite so both face each other on the board.
+    if (active.length === 2) {
+      const diagonalOf: Record<PlayerColor, PlayerColor> = {
+        red: 'yellow', yellow: 'red',
+        green: 'blue', blue: 'green',
+      };
+      const [p1, p2] = active;
+      const expectedP2Color = diagonalOf[p1.color];
+      if (p2.color !== expectedP2Color) {
+        // Remap p2 to diagonal color
+        const colorLabel = colorDetails[expectedP2Color].label;
+        active = [
+          p1,
+          {
+            ...p2,
+            color: expectedP2Color,
+            name: p2.isHuman
+              ? `${colorLabel} Player`
+              : `${colorLabel} CPU`,
+          },
+        ];
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
+    const configuredPlayers: ConfiguredPlayer[] = active.map((s) => ({
       name: s.name.trim(),
       isHuman: s.isHuman,
       color: s.color,
