@@ -14,6 +14,13 @@ export interface Player {
   tokens: number[]; // -1 for base, 0..50 for main path, 51..55 for home stretch, 56 for finished
 }
 
+export interface ConfiguredPlayer {
+  name: string;
+  isHuman: boolean;
+  color: PlayerColor;
+  difficulty?: AIDifficulty;
+}
+
 export type GameStatus = 'WAITING_FOR_ROLL' | 'ROLLING' | 'WAITING_FOR_MOVE' | 'MOVING' | 'CHECKING_RULES' | 'GAME_OVER';
 
 export interface MovingTokenInfo {
@@ -37,10 +44,12 @@ interface GameState {
   validMoves: number[]; // Valid token indices for active player
   movingTokenInfo: MovingTokenInfo | null;
   lastActionNotice: ActionNotice;
+  lastMatchConfig: ConfiguredPlayer[];
+  actionLogs: string[];
   
   // Actions
   setScreen: (screen: GameScreen) => void;
-  setupGame: (numCPUs: number, difficulty: AIDifficulty, playerColor: PlayerColor) => void;
+  setupGame: (configuredPlayers: ConfiguredPlayer[]) => void;
   setGameStatus: (status: GameStatus) => void;
   setDiceValue: (val: number) => void;
   incrementConsecutiveSixes: () => void;
@@ -53,9 +62,9 @@ interface GameState {
   toggleMute: () => void;
   resetGame: () => void;
   getValidMoves: (playerIdx: number, roll: number) => number[];
+  addActionLog: (msg: string) => void;
 }
 
-const colorOrder: PlayerColor[] = ['red', 'green', 'yellow', 'blue'];
 
 export const useGameStore = create<GameState>((set, get) => ({
   currentScreen: 'MENU',
@@ -69,58 +78,24 @@ export const useGameStore = create<GameState>((set, get) => ({
   validMoves: [],
   movingTokenInfo: null,
   lastActionNotice: 'NONE',
+  lastMatchConfig: [],
+  actionLogs: [],
 
   setScreen: (screen) => set({ currentScreen: screen }),
   
-  setupGame: (numCPUs, difficulty, playerColor) => {
-    const humanIndex = colorOrder.indexOf(playerColor);
-
-    const activeColors = new Set<PlayerColor>();
-    activeColors.add(playerColor);
-
-    if (numCPUs === 1) {
-      // 1v1: opponent at diagonal opposite corner
-      // Board layout: 0=TopLeft, 1=TopRight, 2=BottomRight, 3=BottomLeft
-      // Diagonal pairs: (0,2) and (1,3)
-      const oppositeIdx = (humanIndex + 2) % 4;
-      activeColors.add(colorOrder[oppositeIdx]);
-    } else if (numCPUs === 2) {
-      // 1v2: spread 3 players evenly — use opposite corner and one adjacent to opposite
-      // This avoids all 3 being bunched together on one side
-      const oppositeIdx = (humanIndex + 2) % 4;
-      const adjacentToOppositeIdx = (humanIndex + 1) % 4;
-      activeColors.add(colorOrder[oppositeIdx]);
-      activeColors.add(colorOrder[adjacentToOppositeIdx]);
-    } else {
-      colorOrder.forEach(c => activeColors.add(c));
-    }
-
-    const finalPlayers: Player[] = [];
-    let cpuCounter = 1;
-    for (let i = 0; i < 4; i++) {
-      const color = colorOrder[i];
-      if (color === playerColor) {
-        finalPlayers.push({
-          id: finalPlayers.length,
-          name: 'Player 1 (You)',
-          color,
-          isHuman: true,
-          tokens: [-1, -1, -1, -1],
-        });
-      } else if (activeColors.has(color)) {
-        finalPlayers.push({
-          id: finalPlayers.length,
-          name: `CPU ${cpuCounter++}`,
-          color,
-          isHuman: false,
-          difficulty,
-          tokens: [-1, -1, -1, -1],
-        });
-      }
-    }
+  setupGame: (configuredPlayers) => {
+    const finalPlayers: Player[] = configuredPlayers.map((cp, idx) => ({
+      id: idx,
+      name: cp.name.trim() || (cp.isHuman ? `Player ${idx + 1}` : `CPU ${idx + 1}`),
+      color: cp.color,
+      isHuman: cp.isHuman,
+      difficulty: cp.difficulty,
+      tokens: [-1, -1, -1, -1],
+    }));
 
     set({
       players: finalPlayers,
+      lastMatchConfig: configuredPlayers,
       activePlayerIndex: 0,
       gameStatus: 'WAITING_FOR_ROLL',
       diceValue: 1,
@@ -130,6 +105,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       movingTokenInfo: null,
       lastActionNotice: 'NONE',
       currentScreen: 'PLAYING',
+      actionLogs: ['📢 Match started! Get ready to roll.'],
     });
   },
 
@@ -159,7 +135,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   rollDice: () => {
-    const { activePlayerIndex, consecutiveSixes, getValidMoves } = get();
+    const { activePlayerIndex, consecutiveSixes, getValidMoves, players } = get();
+    const activePlayer = players[activePlayerIndex];
     
     set({ gameStatus: 'ROLLING', lastActionNotice: 'NONE' });
     
@@ -171,7 +148,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     setTimeout(() => {
+      get().addActionLog(`🎲 ${activePlayer.name} rolled a ${roll}`);
+
       if (newConsecutive === 3) {
+        get().addActionLog(`⚠️ ${activePlayer.name} rolled three 6s! Turn voided.`);
         set({
           diceValue: roll,
           consecutiveSixes: 0,
@@ -197,6 +177,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
 
       if (valid.length === 0) {
+        get().addActionLog(`❌ ${activePlayer.name} has no valid moves.`);
         setTimeout(() => {
           get().nextTurn();
         }, 1800);
@@ -212,8 +193,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     let targetPos = currentPos;
     if (currentPos === -1) {
       targetPos = 0;
+      get().addActionLog(`🚀 ${activePlayer.name} released a token to start`);
     } else {
       targetPos = currentPos + diceValue;
+      get().addActionLog(`🏃 ${activePlayer.name} moved a token ${diceValue} spaces`);
     }
 
     set({
@@ -243,6 +226,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const targetCoord = getTokenGridCoordinates(playerIdx, endPos, tokenIdx);
     let capturedOpponent = false;
+    let capturedPlayerName = 'Opponent';
 
     const finalPlayers = updatedPlayers.map((p, pIdx) => {
       if (pIdx === playerIdx) return p;
@@ -257,6 +241,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             
             if (!isSafe) {
               capturedOpponent = true;
+              capturedPlayerName = p.name;
               return -1;
             }
           }
@@ -267,9 +252,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { ...p, tokens: updatedTokens };
     });
 
+    if (capturedOpponent) {
+      get().addActionLog(`💥 ${finalPlayers[playerIdx].name} captured ${capturedPlayerName}!`);
+    }
+
     const hasWon = finalPlayers[playerIdx].tokens.every(pos => pos === 56);
 
     if (hasWon) {
+      get().addActionLog(`🏆 ${finalPlayers[playerIdx].name} has WON the match!`);
       set({
         players: finalPlayers,
         movingTokenInfo: null,
@@ -280,7 +270,19 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
+    if (endPos === 56) {
+      get().addActionLog(`🎉 ${finalPlayers[playerIdx].name} got a token home!`);
+    }
+
     const extraTurn = (diceValue === 6 && get().consecutiveSixes < 3) || capturedOpponent;
+
+    if (extraTurn) {
+      if (capturedOpponent) {
+        get().addActionLog(`🔄 ${finalPlayers[playerIdx].name} gets an extra turn for capturing!`);
+      } else {
+        get().addActionLog(`🔄 ${finalPlayers[playerIdx].name} gets an extra turn for rolling a 6!`);
+      }
+    }
 
     set({
       players: finalPlayers,
@@ -324,7 +326,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     movingTokenInfo: null,
     lastActionNotice: 'NONE',
     currentScreen: 'MENU',
+    actionLogs: [],
   }),
+
+  addActionLog: (msg) => set((state) => ({
+    actionLogs: [msg, ...state.actionLogs].slice(0, 15)
+  })),
 }));
 
 const startIndices = [0, 13, 26, 39];

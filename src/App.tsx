@@ -63,18 +63,13 @@ export default function App() {
     validMoves, 
     rollDice, 
     selectToken,
-    lastActionNotice
+    lastActionNotice,
+    lastMatchConfig,
+    actionLogs
   } = useGameStore();
 
   const gameRef = useRef<Phaser.Game | null>(null);
   const prevScreenRef = useRef(currentScreen);
-  const matchSettingsRef = useRef<{ numCPUs: number; difficulty: 'easy' | 'medium' | 'hard'; color: 'red' | 'green' | 'yellow' | 'blue' } | null>(null);
-
-  // Store match configuration settings dynamically for Play Again function
-  const handleLudoSetup = useCallback((numCPUs: number, difficulty: 'easy' | 'medium' | 'hard', color: 'red' | 'green' | 'yellow' | 'blue') => {
-    matchSettingsRef.current = { numCPUs, difficulty, color };
-    setupGame(numCPUs, difficulty, color);
-  }, [setupGame]);
 
   // Phaser Initialization
   useEffect(() => {
@@ -183,7 +178,7 @@ export default function App() {
 
       {/* LUDO ROYALE AI MODULE */}
       {activeGame === 'LUDO' && (
-        <>
+        <div className={`ludo-module-container ${currentScreen === 'PLAYING' ? 'playing-full-bleed' : ''}`}>
           {/* MENU / SETUP */}
           {(currentScreen === 'MENU' || currentScreen === 'SETUP') && (
             <MainMenu onBackToArena={handleBackToArena} />
@@ -273,7 +268,7 @@ export default function App() {
                 </div>
 
                 {/* Mini player status */}
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
                   {players.map((p) => {
                     const cs = colorStyle(p.color);
                     const home = p.tokens.filter(t => t === 56).length;
@@ -292,6 +287,20 @@ export default function App() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Match Logs Feed Console */}
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left' }}>Match Activity</div>
+                  <div className="log-console">
+                    {actionLogs.length === 0 ? (
+                      <div className="log-item" style={{ color: '#475569', fontStyle: 'italic' }}>No activity logged yet...</div>
+                    ) : (
+                      actionLogs.map((log, i) => (
+                        <div key={i} className="log-item">{log}</div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -337,12 +346,8 @@ export default function App() {
 
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                  {matchSettingsRef.current && (
-                    <button className="btn-primary" onClick={() => {
-                      if (matchSettingsRef.current) {
-                        handleLudoSetup(matchSettingsRef.current.numCPUs, matchSettingsRef.current.difficulty, matchSettingsRef.current.color);
-                      }
-                    }} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+                  {lastMatchConfig && lastMatchConfig.length > 0 && (
+                    <button className="btn-primary" onClick={() => setupGame(lastMatchConfig)} style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
                       <Play size={16} /> Play Again
                     </button>
                   )}
@@ -353,7 +358,7 @@ export default function App() {
               </div>
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
