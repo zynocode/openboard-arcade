@@ -233,30 +233,30 @@ export default class MainScene extends Phaser.Scene {
         const litColor   = this.getLighterColorHex(player.color);
 
         // Layer 1: Blurred soft drop shadow (offset down-right)
-        const shadow = this.add.circle(3, 5, 15, 0x000000, 0.45);
+        const shadow = this.add.circle(2.5, 4.5, 14, 0x000000, 0.45);
 
         // Layer 2: Cylinder bottom edge — gives physical height/depth
-        const cylinderBase = this.add.circle(0, 3, 16.5, bevelColor, 1.0);
+        const cylinderBase = this.add.circle(0, 2.5, 15, bevelColor, 1.0);
 
-        // Layer 3: Main dome cap — larger player color circle
-        const cap = this.add.circle(0, -0.5, 16.5, colorHex, 1);
+        // Layer 3: Main dome cap — 15px radius (30px diameter = exactly 75% of 40px cellSize)
+        const cap = this.add.circle(0, -0.5, 15, colorHex, 1);
         cap.setStrokeStyle(1.5, bevelColor, 0.85);
 
         // Layer 4: Edge rim highlight — faint light ring
-        const rim = this.add.circle(0, -0.5, 16, 0xffffff, 0);
-        rim.setStrokeStyle(2, 0xffffff, 0.22);
+        const rim = this.add.circle(0, -0.5, 14.5, 0xffffff, 0);
+        rim.setStrokeStyle(1.5, 0xffffff, 0.22);
 
         // Layer 5: Mid-dome convex sheen — lighter gradient
-        const midDome = this.add.circle(0, -1.5, 10.5, litColor, 0.48);
+        const midDome = this.add.circle(0, -1.5, 9.5, litColor, 0.48);
 
         // Layer 6: Core center recessed circle (adds depth)
-        const core = this.add.circle(0, -1, 5, bevelColor, 0.55);
+        const core = this.add.circle(0, -1, 4.5, bevelColor, 0.55);
 
         // Layer 7: Primary specular glint — sharp white dot top-left
-        const gloss1 = this.add.circle(-5.5, -6.5, 4, 0xffffff, 0.8);
+        const gloss1 = this.add.circle(-5, -6, 3.5, 0xffffff, 0.8);
 
         // Layer 8: Secondary soft glint — dim crescent bottom
-        const gloss2 = this.add.circle(3, 4, 2.5, 0xffffff, 0.15);
+        const gloss2 = this.add.circle(2.5, 3.5, 2, 0xffffff, 0.15);
 
         container.add([shadow, cylinderBase, cap, rim, midDome, core, gloss1, gloss2]);
         

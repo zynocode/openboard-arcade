@@ -424,41 +424,19 @@ export default function App() {
                   </div>
                 );
               })() : (
-              /* ── 4-PLAYER LAYOUT: Corner Cards ──────────────────────── */
-                <div style={{
-                  display: 'grid',
-                  gridTemplateAreas: `
-                    "tl  top  tr"
-                    "lft board rgt"
-                    "bl  bot  br"
-                  `,
-                  gridTemplateColumns: '1fr auto 1fr',
-                  gridTemplateRows: '1fr auto 1fr',
-                  gap: '12px',
-                  alignItems: 'center',
-                  justifyItems: 'center',
-                  paddingTop: '64px',
-                  paddingBottom: '16px',
-                  width: '100%',
-                  maxWidth: '100vw',
-                  boxSizing: 'border-box',
-                }}>
+              /* ── 4-PLAYER LAYOUT: Responsive Grid ───────────────────── */
+                <div className="grid-4p-layout">
                   {/* TL — Red */}
-                  <div style={{ gridArea: 'tl', justifySelf: 'end', alignSelf: 'end' }}>
+                  <div className="grid-4p-tl">
                     {players.find(p => p.color === 'red') && renderPanel(players.find(p => p.color === 'red')!, false, true, 'tl')}
                   </div>
-                  {/* Top spacer */}
-                  <div style={{ gridArea: 'top' }} />
                   {/* TR — Green */}
-                  <div style={{ gridArea: 'tr', justifySelf: 'start', alignSelf: 'end' }}>
+                  <div className="grid-4p-tr">
                     {players.find(p => p.color === 'green') && renderPanel(players.find(p => p.color === 'green')!, false, true, 'tr')}
                   </div>
 
-                  {/* Left / Right spacers */}
-                  <div style={{ gridArea: 'lft' }} />
-
                   {/* Board */}
-                  <div style={{ gridArea: 'board', position: 'relative' }}>
+                  <div className="grid-4p-board" style={{ position: 'relative' }}>
                     <div id="game-container" className="game-canvas-wrap" />
                     {lastActionNotice !== 'NONE' && (
                       <div style={{
@@ -482,16 +460,12 @@ export default function App() {
                     )}
                   </div>
 
-                  <div style={{ gridArea: 'rgt' }} />
-
                   {/* BL — Blue */}
-                  <div style={{ gridArea: 'bl', justifySelf: 'end', alignSelf: 'start' }}>
+                  <div className="grid-4p-bl">
                     {players.find(p => p.color === 'blue') && renderPanel(players.find(p => p.color === 'blue')!, false, true, 'bl')}
                   </div>
-                  {/* Bottom spacer */}
-                  <div style={{ gridArea: 'bot' }} />
                   {/* BR — Yellow */}
-                  <div style={{ gridArea: 'br', justifySelf: 'start', alignSelf: 'start' }}>
+                  <div className="grid-4p-br">
                     {players.find(p => p.color === 'yellow') && renderPanel(players.find(p => p.color === 'yellow')!, false, true, 'br')}
                   </div>
                 </div>
