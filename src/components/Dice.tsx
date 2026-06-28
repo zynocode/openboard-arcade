@@ -3,9 +3,10 @@ import type { PlayerColor } from '../store/gameStore';
 
 interface DiceProps {
   onRoll?: () => void;
+  compact?: boolean;
 }
 
-export default function Dice({ onRoll }: DiceProps = {}) {
+export default function Dice({ onRoll, compact = false }: DiceProps = {}) {
   const { diceValue, gameStatus, players, activePlayerIndex, rollDice } = useGameStore();
 
   const handleRoll = onRoll ?? rollDice;
@@ -41,15 +42,15 @@ export default function Dice({ onRoll }: DiceProps = {}) {
   const currentDots = dotPositions[diceValue] || [[1, 1]];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? '6px' : '12px', width: compact ? 'auto' : '100%' }}>
       {/* 3D Glass Die Container */}
       <button
         onClick={() => canRoll && handleRoll()}
         disabled={!canRoll || isRolling}
         style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '18px',
+          width: compact ? '64px' : '80px',
+          height: compact ? '64px' : '80px',
+          borderRadius: compact ? '14px' : '18px',
           backgroundColor: 'rgba(15, 23, 42, 0.75)',
           border: `2.5px solid ${isRolling ? 'rgba(255,255,255,0.2)' : activeColorHex}`,
           cursor: canRoll ? 'pointer' : 'default',
@@ -129,8 +130,8 @@ export default function Dice({ onRoll }: DiceProps = {}) {
         )}
       </button>
 
-      {/* Action Helper Label */}
-      {canRoll && (
+      {/* Action Helper Label — hidden in compact corner mode */}
+      {canRoll && !compact && (
         <span 
           style={{ 
             fontSize: '11px', 

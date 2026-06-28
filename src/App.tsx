@@ -169,80 +169,66 @@ export default function App() {
     const cs = colorStyle(color);
     const home = p.tokens.filter(t => t === 56).length;
     const isActive = players[activePlayerIndex]?.id === p.id;
+    const isRight = position.endsWith('right');
+    const isBottom = position.startsWith('bottom');
 
-    // Position styles
-    const posStyles: Record<string, React.CSSProperties> = {
-      'top-left': { position: 'absolute', top: '-75px', left: '-10px', display: 'flex', alignItems: 'center', gap: '8px' },
-      'top-right': { position: 'absolute', top: '-75px', right: '-10px', display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', gap: '8px' },
-      'bottom-left': { position: 'absolute', bottom: '-75px', left: '-10px', display: 'flex', alignItems: 'center', gap: '8px' },
-      'bottom-right': { position: 'absolute', bottom: '-75px', right: '-10px', display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', gap: '8px' },
+    // Anchor to board corners — overlays sit outside the board edge
+    const posStyles: React.CSSProperties = {
+      position: 'absolute',
+      ...(isBottom ? { bottom: '-88px' } : { top: '-88px' }),
+      ...(isRight  ? { right: '-8px', flexDirection: 'row-reverse' } : { left: '-8px' }),
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
     };
 
     return (
-      <div style={posStyles[position]} className={`player-profile-overlay ${isActive ? 'active' : ''}`}>
-        {/* Active turn indicator: dice */}
-        {isActive && (
-          <div style={{
-            position: 'absolute',
-            top: position.startsWith('top') ? '55px' : '-85px',
-            left: position.endsWith('left') ? '0' : 'auto',
-            right: position.endsWith('right') ? '0' : 'auto',
-            zIndex: 100
-          }}>
-            <Dice onRoll={handleRollDice} />
-          </div>
-        )}
-
+      <div style={posStyles} className={`player-profile-overlay ${isActive ? 'active' : ''}`}>
         {/* Avatar Circle */}
         <div
           className={`player-avatar-circle ${isActive ? 'active' : ''}`}
-          style={{
-            '--player-color': cs.border,
-            '--player-glow': cs.bg,
-          } as React.CSSProperties}
+          style={{ '--player-color': cs.border, '--player-glow': cs.bg } as React.CSSProperties}
         >
-          <span className="player-avatar-icon">
-            {p.isHuman ? '👤' : '🤖'}
-          </span>
+          <span className="player-avatar-icon">{p.isHuman ? '👤' : '🤖'}</span>
         </div>
 
-        {/* Info Box */}
+        {/* Info Card */}
         <div
           className={`player-details-card ${isActive ? 'active' : ''}`}
-          style={{
-            '--player-color': cs.border,
-            '--player-glow': cs.bg,
-          } as React.CSSProperties}
+          style={{ '--player-color': cs.border, '--player-glow': cs.bg } as React.CSSProperties}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span className={`player-name-text ${isActive ? 'active' : ''}`}>{p.name}</span>
             {!p.isHuman && p.difficulty && (
-              <span style={{ fontSize: '8px', fontWeight: 800, padding: '1px 3px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.08)', color: cs.text }}>
+              <span style={{ fontSize: '8px', fontWeight: 800, padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.07)', color: cs.text }}>
                 {p.difficulty.substring(0, 3).toUpperCase()}
               </span>
             )}
           </div>
 
-          {/* 4 progress dots */}
+          {/* Token progress dots */}
           <div style={{ display: 'flex', gap: '3px', marginTop: '2px' }}>
             {Array.from({ length: 4 }).map((_, idx) => {
-              const isHome = idx < home;
+              const done = idx < home;
               return (
-                <div
-                  key={idx}
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    backgroundColor: isHome ? cs.border : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${isHome ? cs.border : 'rgba(255,255,255,0.1)'}`,
-                    boxShadow: isHome ? `0 0 5px ${cs.border}` : 'none',
-                  }}
-                />
+                <div key={idx} style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  backgroundColor: done ? cs.border : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${done ? cs.border : 'rgba(255,255,255,0.1)'}`,
+                  boxShadow: done ? `0 0 5px ${cs.border}` : 'none',
+                  transition: 'all 0.4s ease',
+                }} />
               );
             })}
           </div>
         </div>
+
+        {/* Dice — inline, only for the active player */}
+        {isActive && (
+          <div style={{ flexShrink: 0 }}>
+            <Dice onRoll={handleRollDice} compact />
+          </div>
+        )}
       </div>
     );
   };

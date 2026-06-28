@@ -22,9 +22,9 @@
   --ludo-yellow: #eab308;
   --ludo-blue: #3b82f6;
 
-  /* Responsive board sizing — leaves room for the control deck (~240px) */
-  --board-size: clamp(300px, min(58vmin, calc(100vw - 280px)), 580px);
-  --hud-width: clamp(300px, min(58vmin, calc(100vw - 280px)), 580px);
+  /* Responsive board sizing — full viewport centered, no sidebar */
+  --board-size: clamp(300px, min(85vmin, calc(100vmin - 200px)), 600px);
+  --hud-width: clamp(300px, min(85vmin, calc(100vmin - 200px)), 600px);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -1077,10 +1077,12 @@ h1, h2, h3, h4 {
   position: relative;
   width: var(--board-size);
   height: var(--board-size);
-  margin: 100px auto;
+  /* 100px top/bottom margins give corner overlays (height ~60px) room outside the board */
+  margin: 110px auto 110px auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .player-profile-overlay {
@@ -1088,6 +1090,8 @@ h1, h2, h3, h4 {
   align-items: center;
   gap: 10px;
   z-index: 15;
+  /* Must be relative so the absolute-positioned active dice anchors here */
+  position: relative;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1153,9 +1157,9 @@ h1, h2, h3, h4 {
   color: #fff;
 }
 
-/* Adjust variable size for playing screen specifically */
+/* In full-bleed playing mode the board uses the full min(vw,vh) minus HUD + corner overlay margins */
 .playing-full-bleed {
-  --board-size: clamp(280px, min(80vw, 80vh - 220px), 520px) !important;
+  --board-size: clamp(280px, min(80vmin, calc(100vmin - 250px)), 580px);
 }
 
 @media (max-width: 480px) {
