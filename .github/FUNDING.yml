@@ -1,0 +1,10 @@
+# GitHub Funding Configuration
+# Sponsor button dikhata hai repo ke sidebar mein
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# GitHub Sponsors (set up at: https://github.com/sponsors)
+github: zynocode
+
+# Custom funding link (discussions / support page)
+custom:
+  - https://github.com/zynocode/zynoarena/discussions
