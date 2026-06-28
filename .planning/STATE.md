@@ -2,7 +2,7 @@
 
 ## Current Status
 - **Current Milestone**: Milestone 1: MVP Release
-- **Current Phase**: Phase 7: Responsive Sizing & Auto-Move Fixes
+- **Current Phase**: Phase 9: Full Screen Bleed Glass Layout & Match History Feed
 - **Active Task**: Branch pushed to remote for manual verify
 
 ## Completed Phases
@@ -13,6 +13,8 @@
 - [x] Phase 5: Polish, Audio, & Responsive UI
 - [x] Phase 6: ZynoArena Landing Page Design & Integration
 - [x] Phase 7: Responsive Sizing & Auto-Move Fixes
+- [x] Phase 8: LibreLudo local multiplayer configurations
+- [x] Phase 9: Full Screen Bleed Glass Layout & Match History Feed
 
 ## Known Issues
 *None*
