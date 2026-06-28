@@ -378,47 +378,54 @@ export default function App() {
               </div>
 
               {/* ── 2-PLAYER LAYOUT: Top ↔ Bottom ───────────────────────── */}
-              {is2Player ? (
-                <div style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  gap: '16px', paddingTop: '72px', paddingBottom: '16px',
-                }}>
-                  {/* Top player (P2, flipped) */}
-                  <div style={{ transform: 'rotate(180deg)' }}>
-                    {renderPanel(players[1], true)}
+              {is2Player ? (() => {
+                // Align panel position with actual board base position:
+                // Yellow & Blue bases are at the bottom of the board.
+                // Red & Green bases are at the top of the board.
+                const bottomPlayer = players.find(p => p.color === 'blue' || p.color === 'yellow') || players[0];
+                const topPlayer = players.find(p => p.id !== bottomPlayer.id) || players[1];
+
+                return (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: '16px', paddingTop: '72px', paddingBottom: '16px',
+                  }}>
+                    {/* Top player (flipped) */}
+                    <div style={{ transform: 'rotate(180deg)' }}>
+                      {renderPanel(topPlayer, true)}
+                    </div>
+
+                    {/* Board */}
+                    <div style={{ position: 'relative' }}>
+                      <div id="game-container" className="game-canvas-wrap" />
+                      {/* Event Banner */}
+                      {lastActionNotice !== 'NONE' && (
+                        <div style={{
+                          position: 'absolute', top: '50%', left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          padding: '12px 22px', borderRadius: '16px', zIndex: 150,
+                          fontSize: '14px', fontWeight: 800,
+                          fontFamily: "'Chakra Petch', sans-serif",
+                          border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
+                          background: 'rgba(2,6,23,0.94)',
+                          color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
+                          boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+                          animation: 'bannerIn 0.3s ease forwards',
+                          pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
+                        }}>
+                          {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
+                          {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
+                          {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
+                          {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom player (normal) */}
+                    {renderPanel(bottomPlayer, false)}
                   </div>
-
-                  {/* Board */}
-                  <div style={{ position: 'relative' }}>
-                    <div id="game-container" className="game-canvas-wrap" />
-                    {/* Event Banner */}
-                    {lastActionNotice !== 'NONE' && (
-                      <div style={{
-                        position: 'absolute', top: '50%', left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        padding: '12px 22px', borderRadius: '16px', zIndex: 150,
-                        fontSize: '14px', fontWeight: 800,
-                        fontFamily: "'Chakra Petch', sans-serif",
-                        border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
-                        background: 'rgba(2,6,23,0.94)',
-                        color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                        animation: 'bannerIn 0.3s ease forwards',
-                        pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-                      }}>
-                        {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
-                        {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
-                        {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
-                        {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bottom player (P1, normal) */}
-                  {renderPanel(players[0], false)}
-                </div>
-
-              ) : (
+                );
+              })() : (
               /* ── 4-PLAYER LAYOUT: Corner Cards ──────────────────────── */
                 <div style={{
                   display: 'grid',
