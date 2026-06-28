@@ -221,18 +221,19 @@ export default class MainScene extends Phaser.Scene {
         const gridCoord = getTokenGridCoordinates(playerIdx, position, tokenIdx);
         const pixel = gridToPixel(gridCoord);
 
-        const container = this.add.container(pixel.x, pixel.y);
+        // We shift the container position so its center (16,16) aligns exactly on grid pixel
+        const container = this.add.container(pixel.x - 16, pixel.y - 16);
 
-        const shadow = this.add.circle(2, 2, 14, 0x000000, 0.4);
-        const body = this.add.circle(0, 0, 14, colorHex, 1);
+        const shadow = this.add.circle(18, 18, 14, 0x000000, 0.4);
+        const body = this.add.circle(16, 16, 14, colorHex, 1);
         body.setStrokeStyle(2, 0xffffff, 0.9);
-        const inner = this.add.circle(0, 0, 7, 0xffffff, 0.3);
+        const inner = this.add.circle(16, 16, 7, 0xffffff, 0.3);
 
         container.add([shadow, body, inner]);
-        container.setSize(28, 28);
+        container.setSize(32, 32);
 
-        // Click interaction binding
-        container.setInteractive(new Phaser.Geom.Circle(0, 0, 14), Phaser.Geom.Circle.Contains);
+        // Click interaction binding - using default 32x32 rectangle centered on goti
+        container.setInteractive();
         container.on('pointerdown', () => {
           this.handleTokenClick(playerIdx, tokenIdx);
         });
@@ -306,8 +307,8 @@ export default class MainScene extends Phaser.Scene {
         const targetPixel = gridToPixel(targetGrid);
 
         const offset = this.calculateStackOffset(players, playerIdx, tokenIdx, targetGrid);
-        const finalX = targetPixel.x + offset.x;
-        const finalY = targetPixel.y + offset.y;
+        const finalX = targetPixel.x + offset.x - 16;
+        const finalY = targetPixel.y + offset.y - 16;
 
         if (Math.abs(container.x - finalX) > 2 || Math.abs(container.y - finalY) > 2) {
           // If token sent back to base (-1) from the board, play spin-shrink capture respawn animation
@@ -435,8 +436,8 @@ export default class MainScene extends Phaser.Scene {
       
       this.tweens.add({
         targets: container,
-        x: point.x,
-        y: point.y,
+        x: point.x - 16,
+        y: point.y - 16,
         duration: 180,
         ease: 'Quad.easeInOut',
         onComplete: () => {
