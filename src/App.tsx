@@ -412,12 +412,9 @@ export default function App() {
                   const topPlayer = players.find(p => p.id !== bottomPlayer.id) || players[1];
 
                   return (
-                    <div style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      gap: '16px', paddingTop: '16px', paddingBottom: '16px',
-                    }}>
-                      {/* Top player (flipped) */}
-                      <div style={{ transform: 'rotate(180deg)' }}>
+                    <div className="playing-2p-layout">
+                      {/* Top/Left player (flipped in portrait, normal on left in landscape) */}
+                      <div className="playing-2p-top">
                         {renderPanel(topPlayer, true)}
                       </div>
 
@@ -447,57 +444,71 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Bottom player (normal) */}
-                      {renderPanel(bottomPlayer, false)}
+                      {/* Bottom/Right player */}
+                      <div>
+                        {renderPanel(bottomPlayer, false)}
+                      </div>
                     </div>
                   );
-                })() : (
-                /* ── 4-PLAYER LAYOUT: Responsive Grid ───────────────────── */
-                  <div className="grid-4p-layout">
-                    {/* TL — Red */}
-                    <div className="grid-4p-tl">
-                    {players.find(p => p.color === 'red') && renderPanel(players.find(p => p.color === 'red')!, false, true, 'tl')}
-                  </div>
-                  {/* TR — Green */}
-                  <div className="grid-4p-tr">
-                    {players.find(p => p.color === 'green') && renderPanel(players.find(p => p.color === 'green')!, false, true, 'tr')}
-                  </div>
+                })() : (() => {
+                  /* ── 4-PLAYER LAYOUT: Responsive Grid with Rotation Mapping ── */
+                  const humanPlayer = players.find(p => p.isHuman);
+                  const isRotated = humanPlayer && (humanPlayer.color === 'red' || humanPlayer.color === 'green');
+                  
+                  // Map screen positions to color bases based on board rotation
+                  const posToColor = isRotated
+                    ? { tl: 'yellow', tr: 'blue', bl: 'green', br: 'red' }
+                    : { tl: 'red', tr: 'green', bl: 'blue', br: 'yellow' };
 
-                  {/* Board */}
-                  <div className="grid-4p-board" style={{ position: 'relative' }}>
-                    <div id="game-container" className="game-canvas-wrap" />
-                    {lastActionNotice !== 'NONE' && (
-                      <div style={{
-                        position: 'absolute', top: '50%', left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        padding: '12px 22px', borderRadius: '16px', zIndex: 150,
-                        fontSize: '14px', fontWeight: 800,
-                        fontFamily: "'Chakra Petch', sans-serif",
-                        border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
-                        background: 'rgba(2,6,23,0.94)',
-                        color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                        animation: 'bannerIn 0.3s ease forwards',
-                        pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-                      }}>
-                        {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
-                        {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
-                        {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
-                        {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
+                  const getPlayerByColor = (color: string) => players.find(p => p.color === color);
+
+                  return (
+                    <div className="grid-4p-layout">
+                      {/* TL — Top Left position */}
+                      <div className="grid-4p-tl">
+                        {getPlayerByColor(posToColor.tl) && renderPanel(getPlayerByColor(posToColor.tl)!, false, true, 'tl')}
                       </div>
-                    )}
-                  </div>
+                      {/* TR — Top Right position */}
+                      <div className="grid-4p-tr">
+                        {getPlayerByColor(posToColor.tr) && renderPanel(getPlayerByColor(posToColor.tr)!, false, true, 'tr')}
+                      </div>
 
-                  {/* BL — Blue */}
-                  <div className="grid-4p-bl">
-                    {players.find(p => p.color === 'blue') && renderPanel(players.find(p => p.color === 'blue')!, false, true, 'bl')}
-                  </div>
-                  {/* BR — Yellow */}
-                  <div className="grid-4p-br">
-                    {players.find(p => p.color === 'yellow') && renderPanel(players.find(p => p.color === 'yellow')!, false, true, 'br')}
-                  </div>
-                </div>
-              )}
+                      {/* Board */}
+                      <div className="grid-4p-board" style={{ position: 'relative' }}>
+                        <div id="game-container" className="game-canvas-wrap" />
+                        {lastActionNotice !== 'NONE' && (
+                          <div style={{
+                            position: 'absolute', top: '50%', left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            padding: '12px 22px', borderRadius: '16px', zIndex: 150,
+                            fontSize: '14px', fontWeight: 800,
+                            fontFamily: "'Chakra Petch', sans-serif",
+                            border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
+                            background: 'rgba(2,6,23,0.94)',
+                            color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+                            animation: 'bannerIn 0.3s ease forwards',
+                            pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
+                          }}>
+                            {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
+                            {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
+                            {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
+                            {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* BL — Bottom Left position */}
+                      <div className="grid-4p-bl">
+                        {getPlayerByColor(posToColor.bl) && renderPanel(getPlayerByColor(posToColor.bl)!, false, true, 'bl')}
+                      </div>
+                      {/* BR — Bottom Right position */}
+                      <div className="grid-4p-br">
+                        {getPlayerByColor(posToColor.br) && renderPanel(getPlayerByColor(posToColor.br)!, false, true, 'br')}
+                      </div>
+                    </div>
+                  );
+                })()}
             </div>
           </div>
         )}

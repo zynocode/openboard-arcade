@@ -1261,4 +1261,37 @@ h1, h2, h3, h4 {
   .grid-4p-br { grid-area: br; justify-self: start; align-self: start; }
 }
 
+/* 2-Player Responsive Layout Wrapper */
+.playing-2p-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (orientation: portrait) {
+  .playing-2p-layout {
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  .playing-2p-top {
+    transform: rotate(180deg);
+  }
+}
+
+@media (orientation: landscape) {
+  .playing-2p-layout {
+    flex-direction: row;
+    gap: 40px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .playing-2p-top {
+    transform: none;
+  }
+}
+
 
