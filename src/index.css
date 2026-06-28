@@ -1221,7 +1221,7 @@ h1, h2, h3, h4 {
   box-sizing: border-box;
   align-items: center;
   justify-items: center;
-  padding-top: 64px;
+  padding-top: 16px;
   padding-bottom: 16px;
   gap: 16px;
 }

@@ -321,22 +321,25 @@ export default function App() {
               padding: '0', gap: '0', position: 'relative',
             }}>
 
-              {/* ── Floating Pill HUD ───────────────────────────────────── */}
+              {/* ── Top Header Bar ── */}
               <div style={{
-                position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)',
+                width: '100%',
+                height: '52px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0 20px',
+                background: 'rgba(10, 18, 35, 0.65)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(16px)',
                 zIndex: 300,
-                display: 'flex', alignItems: 'center', gap: '18px',
-                padding: '7px 14px 7px 10px',
-                background: 'rgba(10,18,35,0.88)',
-                border: '1px solid rgba(255,255,255,0.09)',
-                borderRadius: '100px',
-                backdropFilter: 'blur(20px)',
-                boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${colorStyle(activePlayer?.color ?? 'blue').border}22`,
+                boxSizing: 'border-box',
+                flexShrink: 0
               }}>
-                {/* Color dot + name */}
+                {/* Active Player Turn Status */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{
-                    width: '8px', height: '8px', borderRadius: '50%',
+                    width: '7px', height: '7px', borderRadius: '50%',
                     background: colorStyle(activePlayer?.color ?? 'blue').border,
                     boxShadow: `0 0 10px ${colorStyle(activePlayer?.color ?? 'blue').border}`,
                     animation: 'pulse 1.2s infinite', display: 'inline-block',
@@ -348,15 +351,30 @@ export default function App() {
                     {activePlayer?.name}'s Turn
                   </span>
                 </div>
-                {/* Controls */}
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+
+                {/* Game Title Logo (Center) */}
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  fontFamily: 'Outfit, sans-serif',
+                  color: '#94a3b8',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span>🎲</span> Ludo Royale
+                </div>
+
+                {/* Controls (Right) */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     onClick={toggleMute}
                     title={mute ? 'Unmute' : 'Mute'}
                     style={{
                       background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer',
-                      color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all 0.2s ease',
                     }}
                   >
@@ -365,9 +383,9 @@ export default function App() {
                   <button
                     onClick={handleBackToArena}
                     style={{
-                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '100px', padding: '5px 14px', cursor: 'pointer',
-                      color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px',
+                      background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                      borderRadius: '8px', padding: '5px 12px', cursor: 'pointer',
+                      color: '#f87171', display: 'flex', alignItems: 'center', gap: '4px',
                       fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px',
                       transition: 'all 0.2s ease', fontFamily: "'Chakra Petch', sans-serif",
                     }}
@@ -377,57 +395,67 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ── 2-PLAYER LAYOUT: Top ↔ Bottom ───────────────────────── */}
-              {is2Player ? (() => {
-                // Human player is always at the bottom of the screen
-                const bottomPlayer = players.find(p => p.isHuman) || players[0];
-                const topPlayer = players.find(p => p.id !== bottomPlayer.id) || players[1];
+              {/* Main Content Area */}
+              <div style={{
+                flex: 1,
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                {/* ── 2-PLAYER LAYOUT: Top ↔ Bottom ───────────────────────── */}
+                {is2Player ? (() => {
+                  // Human player is always at the bottom of the screen
+                  const bottomPlayer = players.find(p => p.isHuman) || players[0];
+                  const topPlayer = players.find(p => p.id !== bottomPlayer.id) || players[1];
 
-                return (
-                  <div style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    gap: '16px', paddingTop: '72px', paddingBottom: '16px',
-                  }}>
-                    {/* Top player (flipped) */}
-                    <div style={{ transform: 'rotate(180deg)' }}>
-                      {renderPanel(topPlayer, true)}
+                  return (
+                    <div style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      gap: '16px', paddingTop: '16px', paddingBottom: '16px',
+                    }}>
+                      {/* Top player (flipped) */}
+                      <div style={{ transform: 'rotate(180deg)' }}>
+                        {renderPanel(topPlayer, true)}
+                      </div>
+
+                      {/* Board */}
+                      <div style={{ position: 'relative' }}>
+                        <div id="game-container" className="game-canvas-wrap" />
+                        {/* Event Banner */}
+                        {lastActionNotice !== 'NONE' && (
+                          <div style={{
+                            position: 'absolute', top: '50%', left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            padding: '12px 22px', borderRadius: '16px', zIndex: 150,
+                            fontSize: '14px', fontWeight: 800,
+                            fontFamily: "'Chakra Petch', sans-serif",
+                            border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
+                            background: 'rgba(2,6,23,0.94)',
+                            color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+                            animation: 'bannerIn 0.3s ease forwards',
+                            pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
+                          }}>
+                            {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
+                            {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
+                            {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
+                            {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom player (normal) */}
+                      {renderPanel(bottomPlayer, false)}
                     </div>
-
-                    {/* Board */}
-                    <div style={{ position: 'relative' }}>
-                      <div id="game-container" className="game-canvas-wrap" />
-                      {/* Event Banner */}
-                      {lastActionNotice !== 'NONE' && (
-                        <div style={{
-                          position: 'absolute', top: '50%', left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          padding: '12px 22px', borderRadius: '16px', zIndex: 150,
-                          fontSize: '14px', fontWeight: 800,
-                          fontFamily: "'Chakra Petch', sans-serif",
-                          border: `1.5px solid ${lastActionNotice === 'SIX_EXTRA' ? '#22c55e' : '#ef4444'}`,
-                          background: 'rgba(2,6,23,0.94)',
-                          color: lastActionNotice === 'SIX_EXTRA' ? '#86efac' : lastActionNotice === 'THREE_SIXES' ? '#fca5a5' : '#fcd34d',
-                          boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
-                          animation: 'bannerIn 0.3s ease forwards',
-                          pointerEvents: 'none', textAlign: 'center', whiteSpace: 'nowrap',
-                        }}>
-                          {lastActionNotice === 'CAPTURE'     && `${activePlayer?.name} Captured!`}
-                          {lastActionNotice === 'SIX_EXTRA'   && 'Extra Roll!'}
-                          {lastActionNotice === 'THREE_SIXES' && 'Three 6s — Turn Voided'}
-                          {lastActionNotice === 'NO_MOVES'    && 'No Moves — Skipping'}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom player (normal) */}
-                    {renderPanel(bottomPlayer, false)}
-                  </div>
-                );
-              })() : (
-              /* ── 4-PLAYER LAYOUT: Responsive Grid ───────────────────── */
-                <div className="grid-4p-layout">
-                  {/* TL — Red */}
-                  <div className="grid-4p-tl">
+                  );
+                })() : (
+                /* ── 4-PLAYER LAYOUT: Responsive Grid ───────────────────── */
+                  <div className="grid-4p-layout">
+                    {/* TL — Red */}
+                    <div className="grid-4p-tl">
                     {players.find(p => p.color === 'red') && renderPanel(players.find(p => p.color === 'red')!, false, true, 'tl')}
                   </div>
                   {/* TR — Green */}
@@ -471,7 +499,8 @@ export default function App() {
                 </div>
               )}
             </div>
-          )}
+          </div>
+        )}
 
           {/* GAME OVER */}
           {currentScreen === 'GAME_OVER' && (
