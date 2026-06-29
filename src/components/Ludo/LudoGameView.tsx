@@ -147,7 +147,7 @@ export default function LudoGameView({ onExit }: { onExit: () => void }) {
     }
 
     return () => { if (timeoutId) window.clearTimeout(timeoutId); };
-  }, [currentScreen, activeGame, activePlayerIndex, gameStatus, validMoves, players, rollDice, selectToken, diceValue, play, isAutoPlay]);
+  }, [currentScreen, activePlayerIndex, gameStatus, validMoves, players, rollDice, selectToken, diceValue, play, isAutoPlay]);
 
   // Human Auto-Move hook: automatically select token if only 1 is playable
   useEffect(() => {
@@ -161,7 +161,7 @@ export default function LudoGameView({ onExit }: { onExit: () => void }) {
       }, 800); // 800ms delay so human can see what was rolled
       return () => window.clearTimeout(timeoutId);
     }
-  }, [currentScreen, activeGame, activePlayerIndex, gameStatus, validMoves, selectToken, players, isAutoPlay]);
+  }, [currentScreen, activePlayerIndex, gameStatus, validMoves, selectToken, players, isAutoPlay]);
 
   const activePlayer = players[activePlayerIndex];
 
