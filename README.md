@@ -39,11 +39,14 @@ Play offline. No accounts. No installs. Just open and play.
 
 ### 🖼️ Screenshots
 
-| Main Menu | Game Board | Game Over |
-|---|---|---|
-| Dark glassmorphism lobby | Vector-drawn Ludo board | Confetti + medal scoreboard |
-
-> 💡 *Screenshots coming soon — contributions welcome!*
+<div align="center">
+  <h4>Main Menu / Lobby Setup</h4>
+  <img src="src/assets/menu.png" width="600" alt="OpenBoard Arcade Main Menu" />
+  <br/>
+  
+  <h4>Ludo Royale Board Layout</h4>
+  <img src="src/assets/board.png" width="600" alt="Ludo Royale Game Board" />
+</div>
 
 ---
 
