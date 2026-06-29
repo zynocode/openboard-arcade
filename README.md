@@ -15,8 +15,8 @@
 [![Last Commit](https://img.shields.io/github/last-commit/zynocode/openboard-arcade?style=flat-square)](https://github.com/zynocode/openboard-arcade/commits/main)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
 
-**A premium open-source collection of multiplayer browser board games and retro minigames built with React 19, Phaser 4, and TypeScript. Offline-first, zero install.**
-Play offline instantly. No accounts. No downloads. Just open the browser and play.
+**A premium open-source collection of multiplayer browser board games and retro minigames built with React 19, Phaser 4, and TypeScript. Featuring Ludo Royale and Stockfish-powered Web Chess. Offline-first, zero install.**
+Play offline instantly. No accounts. No downloads. Just open the browser and play your favorite web-based board games.
 
 [🕹️ Play Now →](https://github.com/zynocode/openboard-arcade) &nbsp;·&nbsp; [🐛 Report Bug](https://github.com/zynocode/openboard-arcade/issues/new?labels=bug) &nbsp;·&nbsp; [💡 Request Feature](https://github.com/zynocode/openboard-arcade/issues/new?labels=enhancement) &nbsp;·&nbsp; [🤝 Contribute](CONTRIBUTING.md)
 
@@ -52,6 +52,23 @@ Play offline instantly. No accounts. No downloads. Just open the browser and pla
   <img src="src/assets/board.png" width="600" alt="Ludo Royale Game Board" />
 </div>
 
+</div>
+
+---
+
+## ♟️ Grandmaster Chess – Stockfish AI & Multiplayer
+
+> A fully-featured React Chess application powered by the world-class Stockfish 16.1 Web Worker AI. Experience seamless gameplay, detailed move history, and beautiful customizable themes.
+
+| Feature | Details |
+|---|---|
+| 🧠 AI Engine | Stockfish 16.1 WebAssembly Integration |
+| 🎚️ Difficulties | 5 Tiers (Beginner, Easy, Medium, Hard, Grandmaster) |
+| 🎨 Customization | 5 Premium Board Themes (Classic, Wood, Green, Glass, Coral) |
+| 📜 Match Features | PGN Export, Move History, Board Flipping, Undo/Resign |
+| 📱 Responsive | Adaptive UI scaling with modern glassmorphism design |
+| ⚡ Tech Stack | React 19 + `chess.js` + `react-chessboard` + Web Workers |
+
 ---
 
 ## 🗺️ Roadmap
@@ -67,11 +84,18 @@ Play offline instantly. No accounts. No downloads. Just open the browser and pla
 - [x] Game Over confetti + medal scoreboard
 - [x] Local multiplayer with custom player names
 
-### 🔜 Upcoming Games & Features (Chess, Snake & Ladder, Sudoku)
+### ✅ v1.1.0 — Grandmaster Chess (Released)
+- [x] Full Chess logic engine powered by `chess.js`
+- [x] Integration with WebAssembly Stockfish 16.1 AI
+- [x] 5 scalable difficulty levels with depth-based evaluation
+- [x] Real-time engine evaluation bar
+- [x] PGN Export and interactive move history viewer
+- [x] Dynamic Board themes with glassmorphism UI
+
+### 🔜 Upcoming Games & Features (Snake & Ladder, Sudoku)
 
 | Game | Status | Priority |
 |---|---|---|
-| ♟ Chess | Planned | High |
 | 🎯 Snake & Ladder | Planned | High |
 | ❌ Tic Tac Toe | Planned | Medium |
 | 🐍 Snake Game | Planned | Medium |

@@ -1,7 +1,20 @@
 {
   "name": "openboard-arcade",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "description": "A premium open-source collection of multiplayer browser board games and retro minigames built with React 19, Phaser 4, and TypeScript. Featuring Ludo Royale and Stockfish-powered Chess.",
+  "keywords": [
+    "react-chess",
+    "multiplayer-board-games",
+    "stockfish-js",
+    "open-source-games",
+    "phaser-4",
+    "react-19",
+    "offline-first",
+    "browser-games",
+    "chess-engine",
+    "ludo-game"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,9 +23,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "chess.js": "^1.4.0",
     "lucide-react": "^1.21.0",
     "phaser": "^4.2.0",
     "react": "^19.2.7",
+    "react-chessboard": "^5.10.0",
     "react-dom": "^19.2.7",
     "zustand": "^5.0.14"
   },
