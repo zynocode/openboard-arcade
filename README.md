@@ -40,9 +40,13 @@ Play offline. No accounts. No installs. Just open and play.
 ### 🖼️ Screenshots
 
 <div align="center">
-  <h4>Main Menu / Lobby Setup</h4>
-  <img src="src/assets/menu.png" width="600" alt="OpenBoard Arcade Main Menu" />
-  <br/>
+  <h4>Game Launcher / Mode Selection</h4>
+  <img src="src/assets/lobby.png" width="600" alt="OpenBoard Arcade Lobby Selection" />
+  <br/><br/>
+  
+  <h4>Player Setup & Bot Difficulty</h4>
+  <img src="src/assets/menu.png" width="600" alt="Ludo Royale Player Setup" />
+  <br/><br/>
   
   <h4>Ludo Royale Board Layout</h4>
   <img src="src/assets/board.png" width="600" alt="Ludo Royale Game Board" />
