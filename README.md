@@ -177,17 +177,20 @@ Medium →  Priority queue:
           Capture > Escape Danger > Release from Base > Advance Leader
 
 Hard   →  Weighted scoring matrix per candidate move:
-            +100  Capture opponent token
-            +90   Reach home column (win move)
+            +100  Capture opponent token (Ruthless aggression)
+            +90   Reach home column (Win move)
+            +70   Stalk opponent (Positioning 1-6 tiles behind)
             +60   Escape an active threat zone
             +45   Enter home stretch
             +40   Release token from base (on roll of 6)
             +35   Land on a safe zone cell
-            +0.5  Per-tile proximity bonus (advancement)
-            -25   Step into an opponent's danger zone
+            +0.5  Per-tile proximity bonus (Advancement)
+            -40   Move into an opponent's strike zone (Danger avoidance)
+
+Dice Engine → Features 'Rubber-banding' to keep games close, and 'Pity Boosts' for trailing human players.
 ```
 
-The engine returns the **highest-scoring legal move** deterministically (no RNG in Hard mode).
+The engine returns the **highest-scoring legal move** deterministically (no RNG in Hard mode), making CPU opponents highly competitive.
 
 ---
 

@@ -2099,4 +2099,286 @@ h1, h2, h3, h4 {
   .lk-pin > i { width: 26px; height: 26px; }
 }
 
+/* =========================================================================
+   GAME SPLASH SCREENS (LUDO & CHESS)
+   ========================================================================= */
 
+.splash-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+  background-color: #020617;
+  overflow: hidden;
+}
+
+/* Background artwork layer */
+.splash-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.splash-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px clamp(40px, 8vw, 120px);
+  gap: 40px;
+}
+
+/* LEFT: Branding & Modes */
+.splash-left {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: splashFadeInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes splashFadeInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.splash-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.splash-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+
+.splash-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(48px, 6vw, 72px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0;
+  color: #fff;
+}
+
+.splash-subtitle {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0 0 40px 0;
+  line-height: 1.6;
+}
+
+.splash-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.splash-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 32px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  color: #f8fafc;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  text-align: left;
+}
+
+.splash-mode-btn:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateX(8px);
+}
+
+.splash-mode-btn.active {
+  background: var(--theme-color, rgba(255,255,255,0.1));
+  border-color: var(--theme-border, rgba(255,255,255,0.2));
+  box-shadow: 0 12px 32px var(--theme-shadow, rgba(0,0,0,0.3));
+}
+
+.splash-mode-btn-icon {
+  font-size: 28px;
+  color: var(--theme-icon, #fff);
+  flex-shrink: 0;
+}
+
+.splash-mode-btn-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.splash-mode-btn-content p {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* RIGHT: Config Panel */
+.splash-right {
+  flex: 1;
+  max-width: 480px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.splash-config-panel {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 32px;
+  padding: 40px;
+  box-sizing: border-box;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+  animation: splashFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes splashFadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.splash-config-section {
+  margin-bottom: 32px;
+}
+
+.splash-config-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 16px;
+}
+
+.splash-config-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.splash-option-btn {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #cbd5e1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
+}
+
+.splash-option-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+.splash-option-btn.active {
+  background: var(--theme-color, #3b82f6);
+  border-color: var(--theme-border, #60a5fa);
+  color: #fff;
+  box-shadow: 0 8px 24px var(--theme-shadow, rgba(59,130,246,0.3));
+}
+
+.splash-play-btn {
+  margin-top: auto;
+  width: 100%;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--theme-color-1, #3b82f6) 0%, var(--theme-color-2, #1d4ed8) 100%);
+  border: none;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 12px 32px var(--theme-shadow, rgba(59,130,246,0.4));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.splash-play-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px var(--theme-shadow, rgba(59,130,246,0.5));
+  filter: brightness(1.1);
+}
+
+.splash-play-btn:active {
+  transform: translateY(0);
+}
+
+.splash-back-btn {
+  position: absolute;
+  top: 40px;
+  left: clamp(20px, 4vw, 60px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+.splash-back-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  transform: translateX(-4px);
+}
+
+@media (max-width: 1024px) {
+  .splash-content {
+    flex-direction: column;
+    padding: 100px 24px 40px;
+    gap: 40px;
+  }
+  .splash-left { text-align: center; max-width: 100%; align-items: center; }
+  .splash-logo-wrap { justify-content: center; }
+  .splash-mode-btn { width: 100%; max-width: 480px; }
+  .splash-right { max-width: 100%; width: 100%; }
+  .splash-config-panel { padding: 24px; border-radius: 24px; }
+  .splash-back-btn { top: 20px; left: 20px; }
+}

@@ -269,6 +269,8 @@ class ServerEngine {
 
     let weights = [16, 16, 16, 16, 17, 19]; // standard dice weights
 
+    const tokensInBase = this.securePlayers[activeIdx].tokens.filter(t => t.get() === -1).length;
+
     if (useRubberBanding) {
       // 30% chance for a 6, remaining 70% shared equally (14% each)
       weights = [14, 14, 14, 14, 14, 30];
@@ -286,6 +288,9 @@ class ServerEngine {
 
       const sum = targetWeights.reduce((a, b) => a + b, 0);
       weights = targetWeights.map(w => Math.round((w / sum) * 100));
+    } else if (!isBot && tokensInBase > 0) {
+      // PITY BOOST for humans: 25% chance of rolling a 6 if they have tokens in base!
+      weights = [15, 15, 15, 15, 15, 25];
     }
 
     const totalWeight = weights.reduce((a, b) => a + b, 0);
@@ -382,7 +387,11 @@ class ServerEngine {
       const gotHome = targetPos === 56;
       extraTurn = (roll === 6 && this.secureConsecutiveSixes.get() < 3) || captures || gotHome;
       
-      this.secureGameStatus.set('CHECKING_RULES');
+      if (extraTurn) {
+        this.secureGameStatus.set('WAITING_FOR_ROLL');
+      } else {
+        this.secureGameStatus.set('CHECKING_RULES');
+      }
     }
 
     // Reset timeouts on successful human action

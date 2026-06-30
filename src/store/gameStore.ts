@@ -30,6 +30,8 @@ export interface MovingTokenInfo {
   tokenIdx: number;
   startPos: number;
   endPos: number;
+  captures: boolean;
+  extraTurn: boolean;
 }
 
 export type ActionNotice = 'NONE' | 'CAPTURE' | 'SIX_EXTRA' | 'THREE_SIXES' | 'NO_MOVES';
@@ -224,92 +226,84 @@ export const useGameStore = create<GameState>((set, get) => ({
         playerIdx: activePlayerIndex,
         tokenIdx,
         startPos: moveRes.startPos,
-        endPos: moveRes.endPos
+        endPos: moveRes.endPos,
+        captures: moveRes.captures,
+        extraTurn: moveRes.extraTurn
       }
     });
   },
 
   completeMove: () => {
-    const { movingTokenInfo, players } = get();
-    if (!movingTokenInfo) return;
-
-    const { playerIdx, endPos } = movingTokenInfo;
+    const { activePlayerIndex, movingTokenInfo } = get();
     const serverState = server.getState();
-
+    const players = get().players;
+    
+    let extraTurn = false;
     let capturedOpponent = false;
-    let capturedPlayerName = 'Opponent';
 
-    const prevOpponentStates = players.map(p => [...p.tokens]);
-    serverState.players.forEach((sp, spIdx) => {
-      if (spIdx !== playerIdx) {
-        sp.tokens.forEach((pos, tIdx) => {
-          if (pos === -1 && prevOpponentStates[spIdx][tIdx] !== -1) {
-            capturedOpponent = true;
-            capturedPlayerName = sp.name;
-          }
-        });
+    if (movingTokenInfo) {
+      const { playerIdx, endPos, captures, extraTurn: serverExtraTurn } = movingTokenInfo;
+      
+      extraTurn = serverExtraTurn;
+      capturedOpponent = captures;
+
+      if (captures) {
+        get().addActionLog(`⚔️ ${serverState.players[activePlayerIndex].name} captured an opponent's token!`);
+        audio.play('tokenKill');
       }
-    });
 
-    if (capturedOpponent) {
-      get().addActionLog(`💥 ${serverState.players[playerIdx].name} captured ${capturedPlayerName}!`);
-      audio.play('tokenKill');
+      if (endPos === 56) {
+        get().addActionLog(`🎉 ${serverState.players[playerIdx].name} got a token home!`);
+        audio.play('tokenHome');
+      } else if (!capturedOpponent && endPos >= 0 && endPos <= 50) {
+        const colorIdx = ['red', 'green', 'yellow', 'blue'].indexOf(players[playerIdx].color);
+        const landedGlobalIdx = (startIndices[colorIdx] + endPos) % 52;
+        if (safeZonesGlobalIndices.includes(landedGlobalIdx)) {
+          audio.play('safeCell');
+        }
+      }
+
+      if (extraTurn) {
+        if (captures) {
+          get().addActionLog(`🔄 ${serverState.players[playerIdx].name} gets an extra turn for capturing!`);
+        } else if (endPos === 56) {
+          get().addActionLog(`🔄 ${serverState.players[playerIdx].name} gets an extra turn for bringing token home!`);
+        } else {
+          get().addActionLog(`🔄 ${serverState.players[playerIdx].name} gets an extra turn for rolling a 6!`);
+        }
+      }
     }
 
     const hasWon = serverState.winnerId !== -1;
-
     if (hasWon) {
-      get().addActionLog(`🏆 ${serverState.players[playerIdx].name} has WON the match!`);
+      get().addActionLog(`🏆 ${serverState.players[activePlayerIndex].name} has WON the match!`);
       audio.play('gameWin');
 
-      const finalPlayers: Player[] = serverState.players.map((sp) => ({
+      const finalPlayers = serverState.players.map((sp) => ({
         id: sp.id,
         name: sp.name,
-        color: sp.color as PlayerColor,
+        color: sp.color as 'red' | 'green' | 'yellow' | 'blue',
         isHuman: sp.isHuman,
-        difficulty: sp.difficulty as AIDifficulty,
+        difficulty: sp.difficulty as 'easy' | 'medium' | 'hard',
         tokens: sp.tokens,
       }));
 
       set({
         players: finalPlayers,
         movingTokenInfo: null,
-        winner: finalPlayers[playerIdx],
+        winner: finalPlayers[activePlayerIndex],
         currentScreen: 'GAME_OVER',
         gameStatus: 'GAME_OVER'
       });
       return;
     }
 
-    if (endPos === 56) {
-      get().addActionLog(`🎉 ${serverState.players[playerIdx].name} got a token home!`);
-      audio.play('tokenHome');
-    } else if (!capturedOpponent && endPos >= 0 && endPos <= 50) {
-      const colorIdx = ['red', 'green', 'yellow', 'blue'].indexOf(players[playerIdx].color);
-      const landedGlobalIdx = (startIndices[colorIdx] + endPos) % 52;
-      if (safeZonesGlobalIndices.includes(landedGlobalIdx)) {
-        audio.play('safeCell');
-      }
-    }
-
-    const extraTurn = (get().diceValue === 6 && serverState.consecutiveSixes > 0) || capturedOpponent || endPos === 56;
-
-    if (extraTurn) {
-      if (capturedOpponent) {
-        get().addActionLog(`🔄 ${serverState.players[playerIdx].name} gets an extra turn for capturing!`);
-      } else if (endPos === 56) {
-        get().addActionLog(`🔄 ${serverState.players[playerIdx].name} gets an extra turn for bringing token home!`);
-      } else {
-        get().addActionLog(`🔄 ${serverState.players[playerIdx].name} gets an extra turn for rolling a 6!`);
-      }
-    }
-
-    const finalPlayers: Player[] = serverState.players.map((sp) => ({
+    const finalPlayers = serverState.players.map((sp) => ({
       id: sp.id,
       name: sp.name,
-      color: sp.color as PlayerColor,
+      color: sp.color as 'red' | 'green' | 'yellow' | 'blue',
       isHuman: sp.isHuman,
-      difficulty: sp.difficulty as AIDifficulty,
+      difficulty: sp.difficulty as 'easy' | 'medium' | 'hard',
       tokens: sp.tokens,
     }));
 
@@ -422,7 +416,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           if (pos === -1) {
             if (rollRes === 6) return idx;
           } else if (pos === 56) {
-            // home
+            return -1; // Fixed: explicitly return -1 so it gets filtered out!
           } else if (pos + rollRes <= 56) {
             return idx;
           }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Search } from 'lucide-react';
 
 interface GameItem {
@@ -103,6 +103,18 @@ export default function ArenaPortal({ onSelectGame }: ArenaPortalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'playable' | 'upcoming'>('all');
 
+  const playableGames = gamesList.filter(g => g.status === 'playable');
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFeaturedIndex(prev => (prev + 1) % playableGames.length);
+    }, 5000); // Rotate every 5 seconds
+    return () => clearInterval(interval);
+  }, [playableGames.length]);
+
+  const featuredGame = playableGames[featuredIndex];
+  
   const filteredGames = gamesList.filter((game) => {
     const matchesSearch =
       game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -116,217 +128,161 @@ export default function ArenaPortal({ onSelectGame }: ArenaPortalProps) {
   const upcomingCount = gamesList.filter(g => g.status === 'upcoming').length;
 
   return (
-    <div className="ap-root" style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '40px 24px', boxSizing: 'border-box' }}>
+    <div className="ap-root">
+      {/* Animated Background */}
+      <div className="ap-bg">
+        <div className="ap-bg-sym" style={{ top: '10%', left: '15%', fontSize: '120px', animationDelay: '0s' }}>🎲</div>
+        <div className="ap-bg-sym" style={{ top: '60%', left: '85%', fontSize: '180px', animationDelay: '2s' }}>♟</div>
+        <div className="ap-bg-sym" style={{ top: '80%', left: '20%', fontSize: '100px', animationDelay: '1s' }}>🎮</div>
+      </div>
       
-      {/* ── Dashboard Header ── */}
-      <header style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '20px',
-        marginBottom: '40px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-        paddingBottom: '24px'
-      }}>
-        <div>
-          <h1 style={{
-            margin: 0,
-            fontSize: '32px',
-            fontWeight: 800,
-            fontFamily: 'Outfit, sans-serif',
-            background: 'linear-gradient(135deg, #fff 0%, #cbd5e1 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <span>🎮</span> OpenBoard Arcade <span style={{
-              fontSize: '11px',
-              fontFamily: "'Chakra Petch', monospace",
-              padding: '3px 8px',
-              borderRadius: '6px',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              background: 'rgba(99, 102, 241, 0.1)',
-              color: '#818cf8',
-              letterSpacing: '1px',
-              textTransform: 'uppercase'
-            }}>Dashboard</span>
-          </h1>
-          <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
-            Select a game to start playing locally. Runs 100% offline.
-          </p>
+      {/* ── HERO SECTION ── */}
+      <header className="ap-hero">
+        <div className="ap-hero-eyebrow">
+          <div className="ap-live-dot" /> LOCAL PLAY ACTIVE
         </div>
+        
+        <h1 className="ap-hero-title">
+          <span className="ap-gradient-text">OpenBoard</span> Arcade
+        </h1>
+        
+        <p className="ap-hero-sub">
+          Select a game to start playing locally. Runs 100% offline with zero latency.
+        </p>
+        
+        <div className="ap-stats">
+          <div className="ap-stat">
+            <span className="ap-stat-num">{playableCount}</span>
+            <span className="ap-stat-label">Playable</span>
+          </div>
+          <div className="ap-stat-divider" />
+          <div className="ap-stat">
+            <span className="ap-stat-num">{upcomingCount}</span>
+            <span className="ap-stat-label">Upcoming</span>
+          </div>
+        </div>
+      </header>
 
-        {/* Toolbar: Search + Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div className="ap-search-wrap" style={{ position: 'relative', width: '280px' }}>
-            <Search size={16} className="ap-search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+      {/* ── FEATURED GAME ── */}
+      <section className="ap-section">
+        <div className="ap-section-label">Featured Game</div>
+        
+        <div className="ap-featured-card" onClick={() => featuredGame.status === 'playable' && onSelectGame(featuredGame.id)}>
+          <div className="ap-featured-left">
+            <div className="ap-featured-icon">{featuredGame.icon}</div>
+            <div>
+              <div className="ap-featured-badge">● {featuredGame.status === 'playable' ? 'Playable' : 'Upcoming'}</div>
+              <h2 className="ap-featured-title">{featuredGame.title}</h2>
+              <p className="ap-featured-desc">{featuredGame.description}</p>
+              
+              <div className="ap-featured-tags">
+                {featuredGame.tags.map(t => (
+                  <span className="ap-tag" key={t}>{t}</span>
+                ))}
+              </div>
+              
+              <button 
+                className="ap-cta-primary ap-featured-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectGame(featuredGame.id);
+                }}
+              >
+                <Play size={16} fill="currentColor" /> Play Now
+              </button>
+            </div>
+          </div>
+          
+          <div className="ap-featured-right">
+            <div className="ap-board-preview">
+              <div className="ap-board-grid">
+                {/* 5x5 decorative grid to look like a board */}
+                {Array.from({ length: 25 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="ap-board-cell"
+                    style={{
+                      background: i % 2 === 0 ? 'rgba(255,255,255,0.04)' : featuredGame.glowColor,
+                      border: i === 12 ? `1px solid ${featuredGame.accentColor}` : 'none'
+                    }}
+                  />
+                ))}
+              </div>
+              <span className="ap-board-label">Render Engine Active</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── GAMES GRID ── */}
+      <section className="ap-section">
+        <div className="ap-section-label">The Arcade Collection</div>
+        
+        <div className="ap-toolbar">
+          <div className="ap-search-wrap">
+            <Search size={16} className="ap-search-icon" />
             <input
               type="text"
               className="ap-search"
               placeholder="Search games..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px 10px 38px',
-                borderRadius: '10px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                background: 'rgba(15, 23, 42, 0.6)',
-                color: '#fff',
-                fontSize: '13px',
-                outline: 'none',
-                transition: 'all 0.2s'
-              }}
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', background: 'rgba(15, 23, 42, 0.5)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="ap-filters">
             {([
               { key: 'all', label: `All (${gamesList.length})` },
-              { key: 'playable', label: `Playable (${playableCount})` },
-              { key: 'upcoming', label: `Soon (${upcomingCount})` },
+              { key: 'playable', label: `Playable (${gamesList.filter(g => g.status === 'playable').length})` },
+              { key: 'upcoming', label: `Soon (${gamesList.filter(g => g.status === 'upcoming').length})` },
             ] as const).map(f => (
               <button
                 key={f.key}
                 onClick={() => setActiveFilter(f.key)}
-                style={{
-                  border: 'none',
-                  padding: '7px 14px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  borderRadius: '7px',
-                  cursor: 'pointer',
-                  backgroundColor: activeFilter === f.key ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                  color: activeFilter === f.key ? '#fff' : '#475569',
-                  transition: 'all 0.2s',
-                  fontFamily: 'Inter, sans-serif'
-                }}
+                className={`ap-filter-btn ${activeFilter === f.key ? 'active' : ''}`}
               >
                 {f.label}
               </button>
             ))}
           </div>
         </div>
-      </header>
 
-      {/* ── Games Grid ── */}
-      <main style={{ flex: 1 }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '24px'
-        }}>
+        <div className="ap-grid">
           {filteredGames.map((game) => (
             <div
               key={game.id}
               onClick={() => game.status === 'playable' && onSelectGame(game.id)}
+              className={`ap-card ${game.status === 'playable' ? 'ap-card-playable' : 'ap-card-upcoming'}`}
               style={{
-                position: 'relative',
-                borderRadius: '18px',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
-                background: 'linear-gradient(145deg, rgba(15,23,42,0.8), rgba(8,14,28,0.9))',
-                padding: '24px',
-                cursor: game.status === 'playable' ? 'pointer' : 'default',
-                overflow: 'hidden',
-                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px'
-              }}
-              className={`game-card-hover-${game.status}`}
+                '--card-accent': game.accentColor,
+                '--card-glow': game.glowColor
+              } as React.CSSProperties}
             >
-              {/* Highlight backdrop */}
-              <div style={{
-                position: 'absolute',
-                top: '-40%',
-                left: '-40%',
-                width: '180%',
-                height: '180%',
-                background: `radial-gradient(circle at center, ${game.glowColor} 0%, transparent 60%)`,
-                opacity: 0.15,
-                pointerEvents: 'none',
-                zIndex: 0
-              }} />
-
-              {/* Card Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: '38px', lineHeight: 1 }}>{game.icon}</span>
-                <span style={{
-                  fontSize: '9px',
-                  fontWeight: 800,
-                  fontFamily: "'Chakra Petch', monospace",
-                  padding: '2px 8px',
-                  borderRadius: '5px',
-                  textTransform: 'uppercase',
-                  border: `1px solid ${game.status === 'playable' ? 'rgba(34,197,94,0.3)' : 'rgba(100,116,139,0.3)'}`,
-                  background: game.status === 'playable' ? 'rgba(34,197,94,0.08)' : 'rgba(100,116,139,0.08)',
-                  color: game.status === 'playable' ? '#4ade80' : '#94a3b8'
-                }}>
+              <div className="ap-card-glow-bg" />
+              
+              <div className="ap-card-header">
+                <span className="ap-card-icon">{game.icon}</span>
+                <span className={`ap-card-status ${game.status}`}>
                   {game.status === 'playable' ? '● Playable' : '○ Upcoming'}
                 </span>
               </div>
 
-              {/* Title & Desc */}
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  fontFamily: 'Outfit, sans-serif',
-                  color: '#fff'
-                }}>{game.title}</h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: '13px',
-                  color: '#94a3b8',
-                  lineHeight: 1.5,
-                  minHeight: '60px'
-                }}>{game.description}</p>
-              </div>
+              <h3 className="ap-card-title">{game.title}</h3>
+              <p className="ap-card-desc">{game.description}</p>
 
-              {/* Tags */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', position: 'relative', zIndex: 1 }}>
+              <div className="ap-card-tags">
                 {game.tags.map(t => (
-                  <span key={t} style={{
-                    fontSize: '10px',
-                    fontWeight: 600,
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    color: '#64748b'
-                  }}>{t}</span>
+                  <span className="ap-tag-sm" key={t}>{t}</span>
                 ))}
               </div>
 
-              {/* Action Button */}
-              <div style={{ marginTop: 'auto', position: 'relative', zIndex: 1 }}>
+              <div className="ap-card-footer">
                 <button
                   disabled={game.status !== 'playable'}
-                  style={{
-                    width: '100%',
-                    padding: '11px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: game.status === 'playable' ? 'pointer' : 'default',
-                    background: game.status === 'playable'
-                      ? `linear-gradient(135deg, ${game.accentColor} 0%, ${game.accentColor}dd 100%)`
-                      : 'rgba(255,255,255,0.03)',
-                    color: game.status === 'playable' ? '#fff' : '#475569',
-                    borderWidth: game.status === 'playable' ? 0 : '1px',
-                    borderColor: 'rgba(255,255,255,0.05)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s',
-                    fontFamily: 'Outfit, sans-serif'
+                  className={`ap-card-btn ${game.status}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (game.status === 'playable') onSelectGame(game.id);
                   }}
                 >
                   {game.status === 'playable' ? (
@@ -341,23 +297,28 @@ export default function ArenaPortal({ onSelectGame }: ArenaPortalProps) {
         </div>
 
         {filteredGames.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: '#64748b' }}>
-            <span style={{ fontSize: '48px', display: 'block', marginBottom: '12px' }}>🔍</span>
+          <div className="ap-empty">
+            <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🔍</span>
             <p style={{ margin: 0 }}>No games found matching "<strong>{searchQuery}</strong>"</p>
           </div>
         )}
-      </main>
+      </section>
 
-      {/* ── Footer ── */}
-      <footer style={{
-        marginTop: '60px',
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-        paddingTop: '20px',
-        textAlign: 'center',
-        color: '#475569',
-        fontSize: '12px'
-      }}>
-        <p style={{ margin: 0 }}>OpenBoard Arcade Game Launcher · Local Host Dashboard</p>
+      {/* ── FOOTER ── */}
+      <footer className="ap-footer">
+        <div className="ap-footer-brand">
+          <span className="ap-footer-logo">OpenBoard</span>
+          <span className="ap-footer-version">v1.1.0</span>
+        </div>
+        <p className="ap-footer-tagline">Local Host Dashboard & Game Launcher</p>
+        
+        <div className="ap-footer-links">
+          <a href="#">Arcade Core</a>
+          <span className="ap-footer-dot">·</span>
+          <a href="#">Offline Play</a>
+          <span className="ap-footer-dot">·</span>
+          <a href="#">Render Engine</a>
+        </div>
       </footer>
     </div>
   );

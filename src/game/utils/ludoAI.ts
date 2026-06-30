@@ -129,9 +129,74 @@ export function evaluateCPUMove(
     return bestTokenIdx;
   }
 
-  // 3. Hard Mode: Scoring matrix evaluation
+  // 3. Hard Mode: Scoring matrix evaluation (Advanced Expert AI)
   let bestTokenIdx = validMoves[0];
   let highestScore = -Infinity;
+
+  const getCaptureValue = (targetGlobalIdx: number): number => {
+    if (targetGlobalIdx === -1 || isGlobalCellSafe(targetGlobalIdx)) return -1;
+    let maxCap = -1;
+    for (let pIdx = 0; pIdx < players.length; pIdx++) {
+      if (pIdx === activePlayerIdx) continue;
+      players[pIdx].tokens.forEach(oppPos => {
+        if (oppPos >= 0 && oppPos <= 50 && getGlobalPathIndex(pIdx, oppPos) === targetGlobalIdx) {
+          maxCap = Math.max(maxCap, oppPos);
+        }
+      });
+    }
+    return maxCap;
+  };
+
+  const getThreatScore = (globalCellIdx: number): number => {
+    if (globalCellIdx === -1 || isGlobalCellSafe(globalCellIdx)) return 0;
+    let totalThreat = 0;
+    for (let pIdx = 0; pIdx < players.length; pIdx++) {
+      if (pIdx === activePlayerIdx) continue;
+      players[pIdx].tokens.forEach(oppPos => {
+        if (oppPos >= 0 && oppPos <= 50) {
+          const distance = (globalCellIdx - getGlobalPathIndex(pIdx, oppPos) + 52) % 52;
+          if (distance >= 1 && distance <= 6) {
+             // 6 is slightly more likely due to tension engine boosting 6s
+             totalThreat += (distance === 6 ? 40 : 25); 
+          }
+        }
+      });
+    }
+    return totalThreat;
+  };
+
+  const getStalkingBonus = (globalCellIdx: number): number => {
+    if (globalCellIdx === -1) return 0;
+    let bonus = 0;
+    for (let pIdx = 0; pIdx < players.length; pIdx++) {
+      if (pIdx === activePlayerIdx) continue;
+      players[pIdx].tokens.forEach(oppPos => {
+        if (oppPos >= 15 && oppPos <= 50) { // Opponent is advanced
+          const oppGlobal = getGlobalPathIndex(pIdx, oppPos);
+          const distanceBehind = (oppGlobal - globalCellIdx + 52) % 52;
+          if (distanceBehind >= 1 && distanceBehind <= 6) {
+             bonus = Math.max(bonus, 35); // Stalking an advanced opponent
+          }
+        }
+      });
+    }
+    return bonus;
+  };
+
+  const getWingmanBonus = (globalCellIdx: number, excludeTokenIdx: number): number => {
+    if (globalCellIdx === -1) return 0;
+    let bonus = 0;
+    activePlayer.tokens.forEach((pos, idx) => {
+      if (idx !== excludeTokenIdx && pos >= 0 && pos <= 50) {
+         const friendlyGlobal = getGlobalPathIndex(activePlayerIdx, pos);
+         const distanceBehind = (globalCellIdx - friendlyGlobal + 52) % 52;
+         if (distanceBehind >= 1 && distanceBehind <= 6) {
+            bonus = 20; // Protected by a friendly token behind
+         }
+      }
+    });
+    return bonus;
+  };
 
   validMoves.forEach((tokenIdx) => {
     const curPos = activePlayer.tokens[tokenIdx];
@@ -141,49 +206,64 @@ export function evaluateCPUMove(
 
     let score = 0;
 
-    // A. Capture Opponent (Priority 1, Weight: 100)
-    if (checkWillCapture(nextGlobalIdx)) {
-      score += 100;
+    // A. Capture Opponent: Bounty System (Priority 1)
+    const captureVal = getCaptureValue(nextGlobalIdx);
+    if (captureVal !== -1) {
+      // Base capture score 200, plus bounty based on how far the opponent is (up to 50 * 3 = 150)
+      score += 200 + (captureVal * 3);
     }
 
-    // B. Reaching Goal (Special progress finish, Weight: 90)
+    // B. Reaching Goal
     if (nextPos === 56) {
-      score += 90;
+      score += 180; // High priority to finish tokens
     }
 
-    // C. Entering Home Column (Priority 3, Weight: 75)
+    // C. Entering Home Column
     if (curPos < 51 && nextPos >= 51 && nextPos < 56) {
       score += 75;
     }
 
-    // D. Escaping Imminent Threat (Priority 2, Weight: 80)
-    const wasThreatened = curPos >= 0 && curPos <= 50 && isCellThreatened(curGlobalIdx);
-    const isNowSafe = nextPos >= 51 || isGlobalCellSafe(nextGlobalIdx) || !isCellThreatened(nextGlobalIdx);
-    if (wasThreatened && isNowSafe) {
-      score += 80;
+    // D. Escaping Imminent Threat
+    const curThreat = getThreatScore(curGlobalIdx);
+    const nextThreat = getThreatScore(nextGlobalIdx);
+    
+    if (curPos >= 0 && curPos <= 50 && curThreat > 0) {
+      if (nextPos >= 51 || isGlobalCellSafe(nextGlobalIdx)) {
+        score += curThreat * 2; // Huge bonus for moving to safety when threatened
+      } else if (nextThreat < curThreat) {
+        score += curThreat - nextThreat; // Bonus for moving to a less threatened square
+      }
     }
 
-    // E. Landing on Safe Zone (Priority 5, Weight: 50)
+    // E. Landing on Safe Zone
     const wasSafe = curPos >= 0 && curPos <= 50 && isGlobalCellSafe(curGlobalIdx);
     const isNowSafeZone = nextPos >= 0 && nextPos <= 50 && isGlobalCellSafe(nextGlobalIdx);
     if (!wasSafe && isNowSafeZone) {
       score += 50;
     }
 
-    // F. Releasing from Base (Priority 4, Weight: 70)
+    // F. Releasing from Base
     if (curPos === -1 && roll === 6) {
-      score += 70;
+      score += 65;
     }
 
-    // G. Step into Opponent Danger Zone (-30)
-    const isNowThreatened = nextPos >= 0 && nextPos <= 50 && isCellThreatened(nextGlobalIdx);
-    if (!isNowSafeZone && isNowThreatened) {
-      score -= 30;
+    // G. Probability-Based Danger Penalty
+    if (!isNowSafeZone && nextPos >= 0 && nextPos <= 50) {
+      score -= nextThreat;
     }
 
-    // H. Proximity Progress Bonus (Priority 6, Weight: 30 Max)
-    // Scale factor 0.535 ensures max progression (56 spaces) contributes exactly 30 points
-    score += nextPos * 0.535;
+    // H. Psychological Stalking Bonus
+    if (!isNowSafeZone && nextPos >= 0 && nextPos <= 50) {
+      score += getStalkingBonus(nextGlobalIdx);
+    }
+
+    // I. Wingman Formation Bonus
+    if (!isNowSafeZone && nextPos >= 0 && nextPos <= 50) {
+      score += getWingmanBonus(nextGlobalIdx, tokenIdx);
+    }
+
+    // J. Proximity Progress Bonus
+    score += nextPos * 0.5;
 
     // Pick maximum score
     if (score > highestScore) {

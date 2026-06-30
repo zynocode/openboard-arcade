@@ -7,6 +7,7 @@ import { audio } from '../../audio/AudioManager';
 export default class MainScene extends Phaser.Scene {
   private tokenSprites: Map<string, Phaser.GameObjects.Container> = new Map();
   private unsubscribeStore?: () => void;
+  private lastMovingTokenInfoStr = '';
   private isInitializing = true;
   
   // Animation lock to prevent double animations
@@ -55,8 +56,12 @@ export default class MainScene extends Phaser.Scene {
       this.checkMovingToken(newState);
     });
 
-    // Clean up subscription on scene shutdown
     this.events.on('shutdown', () => {
+      if (this.unsubscribeStore) {
+        this.unsubscribeStore();
+      }
+    });
+    this.events.on('destroy', () => {
       if (this.unsubscribeStore) {
         this.unsubscribeStore();
       }
@@ -418,12 +423,19 @@ export default class MainScene extends Phaser.Scene {
   }
 
   private checkMovingToken(state: any) {
-    if (state.movingTokenInfo && !this.activeMovingTokenKey) {
+    const infoStr = state.movingTokenInfo ? JSON.stringify(state.movingTokenInfo) : '';
+    
+    if (state.movingTokenInfo && this.lastMovingTokenInfoStr !== infoStr) {
+      this.lastMovingTokenInfoStr = infoStr;
       const { playerIdx, tokenIdx, startPos, endPos } = state.movingTokenInfo;
       const key = `${playerIdx}_${tokenIdx}`;
       
       this.activeMovingTokenKey = key;
       this.animatePathMove(playerIdx, tokenIdx, startPos, endPos);
+    }
+
+    if (!state.movingTokenInfo) {
+      this.lastMovingTokenInfoStr = '';
     }
   }
 
